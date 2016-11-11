@@ -8,6 +8,11 @@ Raspberry Pi For our project.
 
 ### Group Members
 
+Progess: This repository is still under develop.
+Lastest Revision: 11/11/2016. Added several recommended value for threshold.
+
+### Group Members
+
 Please update the following list of group members, including the NetIDs
 for each group member.
 

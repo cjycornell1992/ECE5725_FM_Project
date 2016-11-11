@@ -180,6 +180,7 @@ SI4703_SYS_CONFIG2_VOLUME_LSB              = 0
 # Values
 SI4703_SYS_CONFIG2_SEEKTH_MIN              = 0x00
 SI4703_SYS_CONFIG2_SEEKTH_MAX              = 0x7F
+SI4703_SYS_CONFIG2_SEEKTH_RECOMMENDED      = 0x19
 SI4703_SYS_CONFIG2_BAND_USA                = 0x00     # 87.5 - 108 MHz
 SI4703_SYS_CONFIG2_BAND_EUROPE             = 0x00     # 87.5 - 108 MHz
 SI4703_SYS_CONFIG2_BAND_JAPAN_WIDE         = 0x01     # 76   - 108 MHz
@@ -222,9 +223,11 @@ SI4703_SYS_CONFIG3_VOLEXT_EN               = 1
 SI4703_SYS_CONFIG3_SKSNR_DIS               = 0x00
 SI4703_SYS_CONFIG3_SKSNR_MIN               = 0x01
 SI4703_SYS_CONFIG3_SKSNR_MAX               = 0x07
+SI4703_SYS_CONFIG3_SKSNR_RECOMMENDED       = 0x04
 SI4703_SYS_CONFIG3_SKCNT_DIS               = 0x00
 SI4703_SYS_CONFIG3_SKCNT_MAX               = 0x01
 SI4703_SYS_CONFIG3_SKCNT_MIN               = 0x0f
+SI4703_SYS_CONFIG3_SKCNT_RECOMMENDED       = 0x08
 
 #######################################################################
 ################             Test Reg 1                ################
