@@ -9,6 +9,7 @@ Raspberry Pi For our project.
 ### Progess
 
 Progess: This repository is still under develop.
+
 Lastest Revision: 11/11/2016. Added several recommended value for threshold.
 
 ### Group Members
