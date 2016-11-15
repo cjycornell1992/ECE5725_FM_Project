@@ -12,16 +12,17 @@ class SI4703Controller:
     self._i2c           = smbus.SMBus(1 if (piVersion == 2) else 0)
     self._i2cAddr       = SI4703_I2C_ADDR
     self._readReg       = []
-    self.reset()
+    self._reset()
 
-  def id_check(self):
+  def _id_check(self):
     deviceIDWordData      = self.read_one_reg(SI4703_DEVICE_ID_ADDR)
     chipIDWordData        = self.read_one_reg(SI4703_CHIP_ID_ADDR)
-    partNumber            = (deviceIDWordData & SI4703_DEVICE_ID_PN_MASK) >> SI4703_DEVICE_ID_PN_LSB
-    manufactureID         = (deviceIDWordData & SI4703_DEVICE_ID_MFGID_MASK) >> SI4703_DEVICE_ID_MFGID_LSB
-    chipRevision          = (chipIDWordData & SI4703_CHIP_ID_REV_MASK) >> SI4703_CHIP_ID_REV_LSB
-    chipDeviceID          = (chipIDWordData & SI4703_CHIP_ID_DEV_MASK) >> SI4703_CHIP_ID_DEV_LSB
-    chipFirmware          = (chipIDWordData & SI4703_CHIP_ID_FIRMWARE_MASK) >> SI4703_CHIP_ID_FIRMWARE_LSB        
+                                               # word            mask                          lsb
+    partNumber            = self._extract_bits(deviceIDWordData, SI4703_DEVICE_ID_PN_MASK,     SI4703_DEVICE_ID_PN_LSB     ) 
+    manufactureID         = self._extract_bits(deviceIDWordData, SI4703_DEVICE_ID_MFGID_MASK,  SI4703_DEVICE_ID_MFGID_LSB  ) 
+    chipRevision          = self._extract_bits(chipIDWordData,   SI4703_CHIP_ID_REV_MASK,      SI4703_CHIP_ID_REV_LSB      ) 
+    chipDeviceID          = self._extract_bits(chipIDWordData,   SI4703_CHIP_ID_DEV_MASK,      SI4703_CHIP_ID_DEV_LSB      ) 
+    chipFirmware          = self._extract_bits(chipIDWordData,   SI4703_CHIP_ID_FIRMWARE_MASK, SI4703_CHIP_ID_FIRMWARE_LSB )         
     if (partNumber != SI4703_DEVICE_ID):
       sys.stderr.write('DEVICE ID unmatch, read out value: {}\n'.format(partNumber))
       sys.exit(-1)
@@ -43,11 +44,14 @@ class SI4703Controller:
     print ("Chip Device: Si4703")
 
 
-  def reset(self):
+  def _reset(self):
     GPIO.setup(self._resetPin, GPIO.OUT)
     GPIO.output(self._resetPin, GPIO.LOW)
     time.sleep(1)
     GPIO.output(self._resetPin, GPIO.HIGH)
+
+  def _extract_bits(self, word, mask, lsb):
+    return (word & mask) >> lsb
 
   def read_one_reg(self, reg_addr):
     self._readReg = self._i2c.read_i2c_block_data(self._i2cAddr, 0, SI4703_REG_NUM * 2) # bring all registers, each register has two bytes
@@ -59,7 +63,7 @@ class SI4703Controller:
     return wordData
 
   def power_up(self):
-    self.id_check()
+    self._id_check()
 
 try:
   GPIO.setmode(GPIO.BCM)
