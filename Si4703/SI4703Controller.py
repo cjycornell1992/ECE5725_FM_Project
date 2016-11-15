@@ -33,7 +33,7 @@ class SI4703Controller:
       sys.stderr.write('Manufacture ID unmatch, read out value: {}\n'.format(manufactureID))
       sys.exit(-1)
     if (chipRevision != SI4703_CHIP_ID_REV_C):
-      sys.stderr.write('Manufacture ID unmatch, read out value: {}\n'.format(chipRevision))
+      sys.stderr.write('Chip Revision unmatch, read out value: {}\n'.format(chipRevision))
       sys.exit(-1)
     if (chipDeviceID != SI4703_CHIP_ID_DEV_BEFORE_UP):
       sys.stderr.write('chip DEV ID unmatch, read out value: {}\n'.format(chipDeviceID))
@@ -85,6 +85,7 @@ class SI4703Controller:
     
   def _write_sync(self):
     write_buffer = self._rotate_read_reg()
+    # print ("write_buffer = {}".format(write_buffer))
     self._i2c.write_i2c_block_data(self._i2cAddr, 0, write_buffer)
   
   def _enable_oscillator(self):
@@ -144,6 +145,23 @@ class SI4703Controller:
     self._write_one_reg(SI4703_SYS_CONFIG2_ADDR, sysConfigWord2)
     self._write_sync()  
 
+  def _int_callback(self, channel):
+    self._sync_read_reg()
+    word = self._read_one_reg(SI4703_STATUS_RSSI_ADDR)
+    SFBL = self._extract_bits(word, SI4703_STATUS_RSSI_SFBL_MASK, SI4703_STATUS_RSSI_SFBL_LSB)
+    if(SFBL == 1):
+      print "channel found"
+    pass
+
+  def _attach_interrupt(self):
+    self._sync_read_reg()
+    readWord  = self._read_one_reg(SI4703_SYS_CONFIG1_ADDR)
+    writeWord = self._set_bits(readWord, SI4703_SYS_CONFIG1_GPIO2_INT, SI4703_SYS_CONFIG1_GPIO2_MASK, SI4703_SYS_CONFIG1_GPIO2_LSB)
+    self._write_one_reg(SI4703_SYS_CONFIG1_ADDR, writeWord)
+    self._write_sync()
+    GPIO.setup(self._intPin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+    GPIO.add_event_detect(self._intPin, GPIO.FALLING, callback=self._int_callback)
+    
   def power_up(self):
     self._id_check()
     self._enable_oscillator()
@@ -166,18 +184,87 @@ class SI4703Controller:
     print ("Power up succeeds!")
 
   def config(self, region = 'USA'):
+    self._attach_interrupt()
     if(not region in SI4703_REGION_LIST):
       sys.stderr.write('Region not supported, support region:{}\n'.format(SI4703_REGION_LIST))
       sys.exit(-1)
     self._general_configuration()
     self._regional_configuration(region)
+    self.set_volume(50)
+    self.seek_preference(SI4703_POWER_CONFIG_SEEKUP_UP, SI4703_POWER_CONFIG_SKMODE_DEFAULT)
     print ("Config succeeds!")
   
+  def mute(self, status):
+    # set/clear DMUTE bit in power configuration register
+    if(status != SI4703_POWER_CONFIG_DMUTE_EN and status != SI4703_POWER_CONFIG_DMUTE_DIS):
+      sys.stderr.write('error in mute: trying to set unsupported value {}'.format(status))
+    self._sync_read_reg()
+    readWord  = self._read_one_reg(SI4703_POWER_CONFIG_ADDR)
+    writeWord = self._set_bits(readWord, status, SI4703_POWER_CONFIG_DMUTE_MASK, SI4703_POWER_CONFIG_DMUTE_LSB)
+    self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
+    self._write_sync()
+    
+  def force_mono(self, status):
+    # set/clear MONO bit in power configuration register
+    if(status != SI4703_POWER_CONFIG_MONO_DEFAULT and status != SI4703_POWER_CONFIG_MONO_FORCE):
+      sys.stderr.write('error in force_mono: trying to set unsupported value {}'.format(status))
+    self._sync_read_reg()
+    readWord  = self._read_one_reg(SI4703_POWER_CONFIG_ADDR)
+    writeWord = self._set_bits(readWord, status, SI4703_POWER_CONFIG_MONO_MASK, SI4703_POWER_CONFIG_MONO_LSB)
+    self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
+    self._write_sync()
+
+  def set_volume(self, percentage):
+    # set VOLUME bits in system configuration register 2
+    volumeVal = int(round((SI4703_SYS_CONFIG2_VOLUME_MAX * (float(percentage) / 100.0))))
+    self._sync_read_reg()
+    readWord  = self._read_one_reg(SI4703_SYS_CONFIG2_ADDR)
+    writeWord = self._set_bits(readWord, volumeVal, SI4703_SYS_CONFIG2_VOLUME_MASK, SI4703_SYS_CONFIG2_VOLUME_LSB)
+    self._write_one_reg(SI4703_SYS_CONFIG2_ADDR, writeWord)
+    self._write_sync()
+
+  def seek_preference(self, direction, mode):
+    # set SEEKUP and SKMODE bits in power configuration register
+    if(direction != SI4703_POWER_CONFIG_SEEKUP_DOWN and direction != SI4703_POWER_CONFIG_SEEKUP_UP):
+      sys.stderr.write('error in seek_preference: trying to set unsupported direction {}'.format(direction))
+    if(mode != SI4703_POWER_CONFIG_SKMODE_DEFAULT and mode != SI4703_POWER_CONFIG_SKMODE_UPPER_LOWER):
+      sys.stderr.write('error in seek_preference: trying to set unsupported mode {}'.format(mode))
+    self._sync_read_reg()
+    readWord  = self._read_one_reg(SI4703_POWER_CONFIG_ADDR)
+    writeWord = self._set_bits(readWord, direction, SI4703_POWER_CONFIG_SEEKUP_MASK, SI4703_POWER_CONFIG_SEEKUP_LSB)
+    writeWord = self._set_bits(writeWord, mode, SI4703_POWER_CONFIG_SKMODE_MASK, SI4703_POWER_CONFIG_SKMODE_LSB)
+    print ("writeWord in seek_preference:{}".format(writeWord))
+    self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
+    print ("buffer in seek preference, after updating, before sync i2c:{}".format(self._readReg))
+    self._write_sync()
+    
+  def seek(self, status):
+    self._sync_read_reg()
+    readWord  = self._read_one_reg(SI4703_POWER_CONFIG_ADDR)
+    print ("readWord in seek:{}".format(readWord))    
+    writeWord = self._set_bits(readWord, status, SI4703_POWER_CONFIG_SEEK_MASK, SI4703_POWER_CONFIG_SEEK_LSB)
+    self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
+    self._write_sync()
+    print ("seeking...")
+
+  def read_freq(self):
+    self._sync_read_reg()
+    word = self._read_one_reg(SI4703_READ_CHANNEL_ADDR)
+    channelVal = self._extract_bits(word, SI4703_READ_CHANNEL_READCHAN_MASK, SI4703_READ_CHANNEL_READCHAN_LSB)
+    # assume USA, to update later
+    freq = 0.2 * channelVal + 87.5
+    return freq
+
 try:
   GPIO.setmode(GPIO.BCM)
-  ctrl = SI4703Controller(5,13,2)
+  ctrl = SI4703Controller(5,6,2)
   ctrl.power_up()
   ctrl.config('USA')
+  ctrl.force_mono(1)
+  print ("ctrl._readReg = {}".format(ctrl._readReg))
+  #ctrl.seek(SI4703_POWER_CONFIG_SEEK_EN)  
+  #time.sleep(1)
+  #print (ctrl.read_freq())
   while True:
     pass
   
