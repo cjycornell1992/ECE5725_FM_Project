@@ -12,6 +12,8 @@
 SI4703_I2C_ADDR                            = 0x10
 SI4703_REG_NUM                             = 16    # 16 registers in total, each register 2 bytes
 SI4703_RD_ADDR_START                       = 0x0A  # read starts from 0x0A
+SI4703_WR_ADDR_START                       = 0x02  # write starts from 0x02
+SI4703_REGION_LIST                         = ['USA','EU','JPN','JPN+']
 
 #######################################################################
 ################ Device ID and Manufacture ID info Reg ################
@@ -166,6 +168,9 @@ SI4703_SYS_CONFIG1_GPIO1_Z                 = 0x00
 SI4703_SYS_CONFIG1_GPIO1_LOW               = 0x02
 SI4703_SYS_CONFIG1_GPIO1_HIGH              = 0x03
 
+SI4703_DE_DIC = {'USA':SI4703_SYS_CONFIG1_DE_USA, 'EU':SI4703_SYS_CONFIG1_DE_OTHER,
+                 'JPN':SI4703_SYS_CONFIG1_DE_OTHER, 'JPN+':SI4703_SYS_CONFIG1_DE_OTHER}
+
 #######################################################################
 ################     System Configuration Reg2         ################
 #######################################################################
@@ -195,6 +200,12 @@ SI4703_SYS_CONFIG2_SPACE_AUSTRALIA         = 0x00     # 200 kHz
 SI4703_SYS_CONFIG2_SPACE_EUROPE            = 0x01     # 100 kHz
 SI4703_SYS_CONFIG2_SPACE_JAPAN             = 0x01     # 100 kHz
 SI4703_SYS_CONFIG2_SPACE_50K               = 0x02     # 50  kHz
+
+SI4703_BAND_DIC  = {'USA':SI4703_SYS_CONFIG2_BAND_USA, 'EU':SI4703_SYS_CONFIG2_BAND_EUROPE,
+                   'JPN':SI4703_SYS_CONFIG2_BAND_JAPAN, 'JPN+':SI4703_SYS_CONFIG2_BAND_JAPAN_WIDE}
+
+SI4703_SPACE_DIC = {'USA':SI4703_SYS_CONFIG2_SPACE_USA, 'EU':SI4703_SYS_CONFIG2_SPACE_EUROPE,
+                    'JPN':SI4703_SYS_CONFIG2_SPACE_JAPAN, 'JPN+':SI4703_SYS_CONFIG2_SPACE_JAPAN}
 
 #######################################################################
 ################     System Configuration Reg3         ################
