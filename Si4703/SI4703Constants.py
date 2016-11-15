@@ -9,6 +9,10 @@
 # Reference: https://cdn.sparkfun.com/assets/learn_tutorials/2/7/4/Si4703_datasheet.pdf
 ################################################################
 
+SI4703_I2C_ADDR                            = 0x10
+SI4703_REG_NUM                             = 16    # 16 registers in total, each register 2 bytes
+SI4703_RD_ADDR_START                       = 0x0A  # read starts from 0x0A
+
 #######################################################################
 ################ Device ID and Manufacture ID info Reg ################
 #######################################################################
@@ -43,7 +47,8 @@ SI4703_CHIP_ID_FIRMWARE_LSB                = 0
 SI4703_CHIP_ID_REV_C                       = 0x04
 SI4703_CHIP_ID_DEV_BEFORE_UP               = 0x8
 SI4703_CHIP_ID_DEV_AFTER_UP                = 0x9
-SI4703_CHIP_ID_FIRMWARE                    = 0x13
+SI4703_CHIP_ID_FIRMWARE_BEFORE_UP          = 0x00
+SI4703_CHIP_ID_FIRMWARE_AFTER_UP           = 0x13
 
 #######################################################################
 ################        Power Configuration Reg        ################
