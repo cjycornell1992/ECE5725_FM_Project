@@ -52,10 +52,9 @@ class SI4703Controller:
   def _reset(self):
     GPIO.setup(self._resetPin, GPIO.OUT)
     GPIO.output(self._resetPin, GPIO.LOW)
-    # 1 ms
-    time.sleep(0.001)
+    # 10 ms
+    time.sleep(0.01)
     GPIO.output(self._resetPin, GPIO.HIGH)
-    print "reset succeeds!"
 
   def _extract_bits(self, word, mask, lsb):
     return (word & mask) >> lsb	  
@@ -157,16 +156,7 @@ class SI4703Controller:
   def _int_callback(self, channel):
     time.sleep(0.06) # sleep 60 ms according to data sheet
     self.seek(SI4703_POWER_CONFIG_SEEK_DIS)
-    self._tune_end_handling()
-    rssiWord = self._read_one_reg(SI4703_STATUS_RSSI_ADDR)
-    SFBL     = self._extract_bits(rssiWord, SI4703_STATUS_RSSI_SFBL_MASK, SI4703_STATUS_RSSI_SFBL_LSB)
-    if(SFBL == SI4703_STATUS_RSSI_SFBL_FAIL):
-      print "seek/tune failed"
-      # self.seek(SI4703_POWER_CONFIG_SEEK_EN)
-    else:
-      # print "seek/tune succeeds"
-      pass
-      
+    self._tune_end_handling()  
 
   def _attach_interrupt(self):
     self._sync_read_reg()
@@ -204,7 +194,7 @@ class SI4703Controller:
     if(not region in SI4703_REGION_LIST):
       sys.stderr.write('Region not supported, support region:{}\n'.format(SI4703_REGION_LIST))
       sys.exit(-1)
-    self._general_configuration(SI4703_SYS_CONFIG1_BLNDADJ_MINUS_12DB, SI4703_SYS_CONFIG3_SMUTER_FASTEST, SI4703_SYS_CONFIG3_SMUTEA_16DB)
+    self._general_configuration(SI4703_SYS_CONFIG1_BLNDADJ_DEFAULT, SI4703_SYS_CONFIG3_SMUTER_FASTEST, SI4703_SYS_CONFIG3_SMUTEA_16DB)
     self._regional_configuration(region)
     self.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
     self.force_mono(SI4703_POWER_CONFIG_MONO_DEFAULT)
@@ -260,7 +250,32 @@ class SI4703Controller:
     writeWord = self._set_bits(writeWord, direction, SI4703_POWER_CONFIG_SEEKUP_MASK, SI4703_POWER_CONFIG_SEEKUP_LSB)
     self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
     self._write_sync()
-    
+
+  def user_seek(self, status):
+    if (status == SI4703_POWER_CONFIG_SEEKUP_UP):
+      offset = 0.2
+    else:
+      offset = -0.2
+    freqStart  = self.get_freq()
+    freq       = freqStart + offset 
+    # assume USA
+    if freq > 107.9:
+      freq = 87.5
+    elif freq < 87.5:
+	  freq = 107.9
+	  
+    while (freq != freqStart):
+      self.tune(freq)
+      time.sleep(0.1)
+      if(self.get_signal_strength() > 30):
+        break
+      freq = freq + offset 
+      # assume USA
+      if freq > 107.9:
+        freq = 87.5
+      elif freq < 87.5:
+		freq = 107.9
+
   def seek(self, status = SI4703_POWER_CONFIG_SEEK_EN):
     if(status != SI4703_POWER_CONFIG_SEEK_EN and status != SI4703_POWER_CONFIG_SEEK_DIS):
       sys.stderr.write('error in seek: trying to set status to illegal value {}'.format(status))
@@ -273,7 +288,7 @@ class SI4703Controller:
     self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
     self._write_sync()
 
-  def read_freq(self):
+  def get_freq(self):
     self._sync_read_reg()
     word = self._read_one_reg(SI4703_READ_CHANNEL_ADDR)
     channelVal = self._extract_bits(word, SI4703_READ_CHANNEL_READCHAN_MASK, SI4703_READ_CHANNEL_READCHAN_LSB)
@@ -301,6 +316,8 @@ class SI4703Controller:
     channelWord = self._set_bits(channelWord, channelValue, SI4703_CHANNEL_CHAN_MASK, SI4703_CHANNEL_CHAN_LSB)
     channelWord = self._set_bits(channelWord, SI4703_CHANNEL_TUNE_EN, SI4703_CHANNEL_TUNE_MASK, SI4703_CHANNEL_TUNE_LSB)
     self._write_one_reg(SI4703_CHANNEL_ADDR, channelWord)
+    # I don't know why, reset here is necessary for the device to work without any reason
+    self._reset()            
     self._write_sync()       
   
   def _tune_end_handling(self):
