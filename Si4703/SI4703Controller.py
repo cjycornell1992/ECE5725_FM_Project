@@ -1,4 +1,5 @@
 from SI4703Constants import *
+from I2CRaw import I2CRaw
 import RPi.GPIO as GPIO
 import smbus
 import time
@@ -9,9 +10,10 @@ class SI4703Controller:
   def __init__(self, resetPin, intPin, piVersion):
     self._resetPin      = resetPin
     self._intPin        = intPin
-    self._i2c           = smbus.SMBus(1 if (piVersion == 2) else 0)
+    #self._i2c           = smbus.SMBus(1 if (piVersion == 2) else 0)
     self._i2cAddr       = SI4703_I2C_ADDR
-    self._wr_rd_offest  = ((SI4703_RD_ADDR_START - SI4703_WR_ADDR_START) << 1) + 1
+    self._i2c           = I2CRaw(self._i2cAddr, 1 if (piVersion == 2) else 0)
+    self._wr_rd_offset  = ((SI4703_RD_ADDR_START - SI4703_WR_ADDR_START) << 1)
     self._readReg       = []
     self._reset()
 
@@ -53,6 +55,7 @@ class SI4703Controller:
     # 1 ms
     time.sleep(0.001)
     GPIO.output(self._resetPin, GPIO.HIGH)
+    print "reset succeeds!"
 
   def _extract_bits(self, word, mask, lsb):
     return (word & mask) >> lsb	  
@@ -62,7 +65,7 @@ class SI4703Controller:
     return (value << lsb) | (old_word & toggledMask)
 
   def _sync_read_reg(self):
-    self._readReg = self._i2c.read_i2c_block_data(self._i2cAddr, 0, SI4703_REG_NUM << 1) # bring all registers, each register has two bytes
+    self._readReg = self._i2c.read_i2c_block_data((SI4703_REG_NUM << 1)) # bring all registers, each register has two bytes
     
   def _read_one_reg(self, reg_addr):
     # read from the buffer, needs to be read synced first
@@ -80,13 +83,16 @@ class SI4703Controller:
     self._readReg[upperByteIdx] = word >> 8
     self._readReg[lowerByteIdx] = word & 0x00ff
 
-  def _rotate_read_reg(self): 
-    return self._readReg[self._wr_rd_offest:] + self._readReg[:self._wr_rd_offest]
+  def _rotate_read_reg(self, offset): 
+    rotatedBuffer = self._readReg[offset:] + self._readReg[:offset]
+    #rotatedBuffer.append(rotatedBuffer[-1])
+    del rotatedBuffer[-1]
+    return rotatedBuffer
     
   def _write_sync(self):
-    write_buffer = self._rotate_read_reg()
+    write_buffer = self._rotate_read_reg(self._wr_rd_offset)
     # print ("write_buffer = {}".format(write_buffer))
-    self._i2c.write_i2c_block_data(self._i2cAddr, 0, write_buffer)
+    self._i2c.write_i2c_block_data(write_buffer)
   
   def _enable_oscillator(self):
     # set XOSCEN bit in Test 1 register
@@ -146,6 +152,7 @@ class SI4703Controller:
     self._write_sync()  
 
   def _int_callback(self, channel):
+    print "hello"
     self._sync_read_reg()
     word = self._read_one_reg(SI4703_STATUS_RSSI_ADDR)
     SFBL = self._extract_bits(word, SI4703_STATUS_RSSI_SFBL_MASK, SI4703_STATUS_RSSI_SFBL_LSB)
@@ -169,8 +176,8 @@ class SI4703Controller:
     self._enable_device()
     self._led_on()
     self._write_sync()
-    # wait for 500 ms until oscillator becomes stable
-    time.sleep(0.5)    
+    # wait for 1 s until oscillator becomes stable
+    time.sleep(1)    
     self._sync_read_reg()
     chipIDWordData = self._read_one_reg(SI4703_CHIP_ID_ADDR)
     chipDeviceID   = self._extract_bits(chipIDWordData,   SI4703_CHIP_ID_DEV_MASK,      SI4703_CHIP_ID_DEV_LSB      ) 
@@ -191,13 +198,13 @@ class SI4703Controller:
     self._general_configuration()
     self._regional_configuration(region)
     self.set_volume(50)
-    self.seek_preference(SI4703_POWER_CONFIG_SEEKUP_UP, SI4703_POWER_CONFIG_SKMODE_DEFAULT)
     print ("Config succeeds!")
   
   def mute(self, status):
     # set/clear DMUTE bit in power configuration register
     if(status != SI4703_POWER_CONFIG_DMUTE_EN and status != SI4703_POWER_CONFIG_DMUTE_DIS):
       sys.stderr.write('error in mute: trying to set unsupported value {}'.format(status))
+      sys.exit(-1)
     self._sync_read_reg()
     readWord  = self._read_one_reg(SI4703_POWER_CONFIG_ADDR)
     writeWord = self._set_bits(readWord, status, SI4703_POWER_CONFIG_DMUTE_MASK, SI4703_POWER_CONFIG_DMUTE_LSB)
@@ -208,6 +215,7 @@ class SI4703Controller:
     # set/clear MONO bit in power configuration register
     if(status != SI4703_POWER_CONFIG_MONO_DEFAULT and status != SI4703_POWER_CONFIG_MONO_FORCE):
       sys.stderr.write('error in force_mono: trying to set unsupported value {}'.format(status))
+      sys.exit(-1)
     self._sync_read_reg()
     readWord  = self._read_one_reg(SI4703_POWER_CONFIG_ADDR)
     writeWord = self._set_bits(readWord, status, SI4703_POWER_CONFIG_MONO_MASK, SI4703_POWER_CONFIG_MONO_LSB)
@@ -216,6 +224,9 @@ class SI4703Controller:
 
   def set_volume(self, percentage):
     # set VOLUME bits in system configuration register 2
+    if(percentage > 100):
+      sys.stderr.write('error in set_volume: volume percentage larger than 100 {}'.format(percentage))
+      sys.exit(-1)
     volumeVal = int(round((SI4703_SYS_CONFIG2_VOLUME_MAX * (float(percentage) / 100.0))))
     self._sync_read_reg()
     readWord  = self._read_one_reg(SI4703_SYS_CONFIG2_ADDR)
@@ -227,21 +238,20 @@ class SI4703Controller:
     # set SEEKUP and SKMODE bits in power configuration register
     if(direction != SI4703_POWER_CONFIG_SEEKUP_DOWN and direction != SI4703_POWER_CONFIG_SEEKUP_UP):
       sys.stderr.write('error in seek_preference: trying to set unsupported direction {}'.format(direction))
+      sys.exit(-1)
     if(mode != SI4703_POWER_CONFIG_SKMODE_DEFAULT and mode != SI4703_POWER_CONFIG_SKMODE_UPPER_LOWER):
       sys.stderr.write('error in seek_preference: trying to set unsupported mode {}'.format(mode))
+      sys.exit(-1)
     self._sync_read_reg()
     readWord  = self._read_one_reg(SI4703_POWER_CONFIG_ADDR)
     writeWord = self._set_bits(readWord, direction, SI4703_POWER_CONFIG_SEEKUP_MASK, SI4703_POWER_CONFIG_SEEKUP_LSB)
     writeWord = self._set_bits(writeWord, mode, SI4703_POWER_CONFIG_SKMODE_MASK, SI4703_POWER_CONFIG_SKMODE_LSB)
-    print ("writeWord in seek_preference:{}".format(writeWord))
     self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
-    print ("buffer in seek preference, after updating, before sync i2c:{}".format(self._readReg))
     self._write_sync()
     
   def seek(self, status):
     self._sync_read_reg()
-    readWord  = self._read_one_reg(SI4703_POWER_CONFIG_ADDR)
-    print ("readWord in seek:{}".format(readWord))    
+    readWord  = self._read_one_reg(SI4703_POWER_CONFIG_ADDR)    
     writeWord = self._set_bits(readWord, status, SI4703_POWER_CONFIG_SEEK_MASK, SI4703_POWER_CONFIG_SEEK_LSB)
     self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
     self._write_sync()
@@ -255,20 +265,26 @@ class SI4703Controller:
     freq = 0.2 * channelVal + 87.5
     return freq
 
+
 try:
-  GPIO.setmode(GPIO.BCM)
+  GPIO.setmode(GPIO.BCM)  
   ctrl = SI4703Controller(5,6,2)
   ctrl.power_up()
   ctrl.config('USA')
-  ctrl.force_mono(1)
+  ctrl.seek_preference(0,1)
+  ctrl._sync_read_reg()
   print ("ctrl._readReg = {}".format(ctrl._readReg))
-  #ctrl.seek(SI4703_POWER_CONFIG_SEEK_EN)  
-  #time.sleep(1)
-  #print (ctrl.read_freq())
+  
+  ctrl.seek(SI4703_POWER_CONFIG_SEEK_EN)
+  ctrl._sync_read_reg()
+  print ("ctrl._readReg = {}".format(ctrl._readReg))  
   while True:
-    pass
+    time.sleep(1)
+    print (ctrl.read_freq())
   
 except:
   pass
 
 GPIO.cleanup()
+ctrl._i2c.close()
+
