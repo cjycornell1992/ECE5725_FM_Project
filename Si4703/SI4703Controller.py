@@ -1,3 +1,20 @@
+#################################################################
+# Author: Junyin Chen(jc2954), Yuxiao Kun(xy284), Zhenchuan Pang(zp55)
+#
+# Date: Nov.17 2016
+#
+# SI4703Controller.py
+#
+# Description: Drivers and Control libraries for SI4703
+#              To use this, users just need to import this class,
+#              set GPIO Mode,Pass in Reset pin and Interrupt pin number
+#              and Board Version to instantiate this module,
+#              after calling power_up and set regional configuration
+#              the user could select tune or user_seek to listen 
+#              to the music. Now, it only supports channels in USA
+#              
+################################################################
+
 from SI4703Constants import *
 from I2CRaw import I2CRaw
 import RPi.GPIO as GPIO
@@ -10,7 +27,6 @@ class SI4703Controller:
   def __init__(self, resetPin, intPin, piVersion):
     self._resetPin      = resetPin
     self._intPin        = intPin
-    #self._i2c           = smbus.SMBus(1 if (piVersion == 2) else 0)
     self._i2cAddr       = SI4703_I2C_ADDR
     self._i2c           = I2CRaw(self._i2cAddr, 1 if (piVersion == 2) else 0)
     self._wr_rd_offset  = ((SI4703_RD_ADDR_START - SI4703_WR_ADDR_START) << 1)
