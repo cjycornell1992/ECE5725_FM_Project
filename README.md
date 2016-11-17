@@ -10,8 +10,9 @@ Raspberry Pi For our project.
 
 Progess: This repository is still under develop.
 
-Lastest Revision: 11/11/2016. Added several recommended value for threshold.
-
+Lastest Revision: 11/17/2016. SI4703 Controller is now working in USA.
+                  Example script test.py is attached in Si4703 directory.
+                  
 ### Group Members
 
  * Junyin Chen    (jc2954)
