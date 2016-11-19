@@ -278,7 +278,7 @@ class SI4703Controller:
     if freq > 107.9:
       freq = 87.5
     elif freq < 87.5:
-	  freq = 107.9
+      freq = 107.9
 	  
     while (freq != freqStart):
       self.tune(freq)
@@ -290,7 +290,7 @@ class SI4703Controller:
       if freq > 107.9:
         freq = 87.5
       elif freq < 87.5:
-		freq = 107.9
+        freq = 107.9
 
   def seek(self, status = SI4703_POWER_CONFIG_SEEK_EN):
     if(status != SI4703_POWER_CONFIG_SEEK_EN and status != SI4703_POWER_CONFIG_SEEK_DIS):
