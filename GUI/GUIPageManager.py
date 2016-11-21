@@ -1,5 +1,4 @@
 import pygame
-import os
 from GUIPage        import GUIPage
 from threading      import Thread
 from ColorConstants import *
@@ -7,22 +6,18 @@ from ColorConstants import *
 class GUIPageManager:
 
   def __init__(self, size = (320, 240), debug = False):
+
     pygame.init()
+    
+    if not debug:
+      pygame.mouse.set_visible(False)
+
     self.screen        = pygame.display.set_mode(size)
     self.curPageNum    = 0
     self.curPage       = None
     self.pageNumCount  = 0
     self.pages         = []
     self.pageDic       = {}
-    if not debug:
-      self._set_env()
-  
-  def _set_env(self):
-    os.putenv('SDL_VIDEODRIVER', 'fbcon')
-    os.putenv('SDL_FBDEV', '/dev/fb1')
-    os.putenv('SDL_MOUSEDRV', 'TSLIB')
-    os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
-    pygame.mouse.set_visible(False)
 
   def add_page(self):
     page = GUIPage(self, self.pageNumCount)

@@ -1,4 +1,5 @@
 import time
+import os
 from ColorConstants import *
 from GUIPageManager import GUIPageManager
 
@@ -8,7 +9,15 @@ def button0_callback():
   print "you clicked on " + button0.text  
   button0.page.manager.turn_to_page(page1)
 
-manager = GUIPageManager(debug = True)
+debug = False
+
+if not debug:
+  os.putenv('SDL_VIDEODRIVER', 'fbcon')
+  os.putenv('SDL_FBDEV', '/dev/fb1')
+  os.putenv('SDL_MOUSEDRV', 'TSLIB')
+  os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+
+manager = GUIPageManager(debug = debug)
 page0   = manager.add_page()
 button0 = page0.add_button("Turn to Page 1", (180,180), call_back = button0_callback)
 button1 = page0.add_button("How are you", (240, 120), 30, RED)
