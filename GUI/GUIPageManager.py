@@ -45,9 +45,12 @@ class GUIPageManager:
             if button.callBack != None:
               button.callBack()
   
-  def turn_to_page(self, page):
+  def turn_to_page(self, page, set_parent = True):
     if (page != None) and (page in self.pages):
-      self.curPage = page
+      if set_parent:
+        page.parentNum  = self.curPageNum
+      self.curPageNum = page.num
+      self.curPage    = page
   
   def control_enable(self):
     self.on        = True

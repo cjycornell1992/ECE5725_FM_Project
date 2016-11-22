@@ -8,6 +8,9 @@ def button0_callback():
   global page1
   print "you clicked on " + button0.text  
   button0.page.manager.turn_to_page(page1)
+  global page0
+  print page0
+  print page1.manager.pageDic[page1.parentNum]
 
 debug = True
 

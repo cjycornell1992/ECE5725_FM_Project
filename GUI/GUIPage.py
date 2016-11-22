@@ -1,14 +1,14 @@
 import pygame
-import sys
 from GUIButton import GUIButton
 from ColorConstants import *
 
 class GUIPage:
   
   def __init__(self, manager, num):
-    self.buttons = []
-    self.manager = manager
-    self.num     = num
+    self.buttons   = []
+    self.manager   = manager
+    self.num       = num
+    self.parentNum = -1
   
   def _blit(self):
     for button in self.buttons:
@@ -29,8 +29,6 @@ class GUIPage:
   def _exit_callback(self):
     self.manager.control_disable()
     print "exiting"
-    #raise KeyboardInterrupt
-    #sys.exit(0)
 
   def add_exit(self, pos = (280, 160), size = 40, color = WHITE):
     self.add_button("exit", pos, size, color, self._exit_callback)
