@@ -8,16 +8,15 @@ class GUIPageManager:
   def __init__(self, size = (320, 240), debug = False):
 
     pygame.init()
-    
-    if not debug:
-      pygame.mouse.set_visible(False)
+    pygame.mouse.set_visible(debug)
 
-    self.screen        = pygame.display.set_mode(size)
-    self.curPageNum    = 0
-    self.curPage       = None
-    self.pageNumCount  = 0
-    self.pages         = []
-    self.pageDic       = {}
+    self.screen         = pygame.display.set_mode(size)
+    self.curPageNum     = 0
+    self.curPage        = None
+    self.pageNumCount   = 0
+    self.pages          = []
+    self.pageDic        = {}
+    self.on             = False
 
   def add_page(self):
     page = GUIPage(self, self.pageNumCount)
@@ -35,7 +34,7 @@ class GUIPageManager:
     pygame.display.flip()
 
   def _mouse_detect(self):
-    while True:
+    while self.on:
       for event in pygame.event.get():
         if (event.type is pygame.MOUSEBUTTONUP):
           pos = pygame.mouse.get_pos()
@@ -51,5 +50,10 @@ class GUIPageManager:
       self.curPage = page
   
   def control_enable(self):
+    self.on        = True
     mouseCollector = Thread(target = self._mouse_detect)
     mouseCollector.start()
+
+  def control_disable(self):
+	self.on  = False
+ 

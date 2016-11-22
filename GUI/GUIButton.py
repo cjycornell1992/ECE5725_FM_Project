@@ -15,3 +15,7 @@ class GUIButton:
     self.top      = self.rect.top
     self.bottom   = self.rect.bottom
     self.callBack = call_back
+
+  def update_text(self, text):
+    self.text = text
+ 
