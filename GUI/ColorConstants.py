@@ -1,4 +1,15 @@
+#################################################################
+# Author: Junyin Chen(jc2954), Yuxiao Kun(xy284), Zhenchuan Pang(zp55)
+#
+# Date: Nov.22 2016
+#
+# ColorConstants.py
+#
+# Description: Constants of RGB values of different colors in tuple
 # reference: www.rapidtables.com/web/color/RGB_Color.htm
+#              
+################################################################
+
 
 BLACK         = (0, 0, 0)
 BLUE          = (0,0,255)

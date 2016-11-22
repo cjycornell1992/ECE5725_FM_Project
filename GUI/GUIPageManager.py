@@ -1,3 +1,23 @@
+#################################################################
+# Author: Junyin Chen(jc2954), Yuxiao Kun(xy284), Zhenchuan Pang(zp55)
+#
+# Date: Nov.22 2016
+#
+# GUIPageManager.py
+#
+# Description: This GUI library is based on pygame framework
+# Page Manager class knows all pages it has, and knows the current page
+# in the page list. Also, it has a switch to enable all the callbacks
+# of buttons in all pages. This switch should be enabled after all pages,
+# all buttons have been added, and all callbacks have been specified,
+# otherwise it might have undefined behaviour. The switch spawns a child
+# thread to collect mouse clicks (finger taps) on the screen (touchscreen),
+# a user should disable the switch to kill the child thread and ends
+# the script., note an exit button is implicitly attached to every page
+# clicking the exit button could elegantly end the script
+#             
+################################################################
+
 import pygame
 from GUIPage        import GUIPage
 from threading      import Thread

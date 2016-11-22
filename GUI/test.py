@@ -1,3 +1,15 @@
+#################################################################
+# Author: Junyin Chen(jc2954), Yuxiao Kun(xy284), Zhenchuan Pang(zp55)
+#
+# Date: Nov.22 2016
+#
+# test.py
+#
+# Description: This GUI library is based on pygame framework
+# This is an example script illustrating how our GUI utility could be used
+#             
+################################################################
+
 import time
 import os
 import RPi.GPIO as GPIO
