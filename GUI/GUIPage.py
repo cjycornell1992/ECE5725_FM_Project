@@ -1,3 +1,17 @@
+#################################################################
+# Author: Junyin Chen(jc2954), Yuxiao Kun(xy284), Zhenchuan Pang(zp55)
+#
+# Date: Nov.22 2016
+#
+# GUIPage.py
+#
+# Description: This GUI library is based on pygame framework
+# Page class knows all buttons it has, and knows how this page should
+# look like. Also, it knows its manager, and its parent page to better
+# implement the "back" function.
+#              
+################################################################
+
 import pygame
 from GUIButton import GUIButton
 from ColorConstants import *

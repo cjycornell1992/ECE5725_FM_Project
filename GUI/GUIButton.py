@@ -1,3 +1,18 @@
+#################################################################
+# Author: Junyin Chen(jc2954), Yuxiao Kun(xy284), Zhenchuan Pang(zp55)
+#
+# Date: Nov.22 2016
+#
+# GUIButton.py
+#
+# Description: This GUI library is based on pygame framework
+# Button class knows its own text, its own position on the screen,
+# And bundles a callback (could be None, though) that should be called
+# when the button is pressed. The user could also add extra callbacks
+# if the user wants to extend the ability of a button in the future
+#              
+################################################################
+
 import pygame
 
 class GUIButton:
