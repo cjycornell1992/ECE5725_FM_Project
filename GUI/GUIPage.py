@@ -9,6 +9,7 @@ class GUIPage:
     self.manager   = manager
     self.num       = num
     self.parentNum = -1
+    self._add_exit_button()
   
   def _blit(self):
     for button in self.buttons:
@@ -30,7 +31,12 @@ class GUIPage:
     self.manager.control_disable()
     print "exiting"
 
-  def add_exit(self, pos = (280, 160), size = 40, color = WHITE):
+  def _back_callback(self):
+    if self.parentNum != -1:
+      self.manager.turn_to_page(self.manager.pageDic[self.parentNum], set_parent = False)
+
+  def _add_exit_button(self, pos = (280, 180), size = 40, color = RED):
     self.add_button("exit", pos, size, color, self._exit_callback)
 
- 
+  def add_back_button(self, pos = (280, 210), size = 40, color = CYAN):
+    self.add_button("back", pos, size, color, self._back_callback)
