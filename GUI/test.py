@@ -6,6 +6,7 @@ sys.path.append("..")
 
 from ColorConstants                  import *
 from Si4703.SI4703Constants          import SI4703_POWER_CONFIG_SEEKUP_UP, SI4703_POWER_CONFIG_SEEKUP_DOWN
+from Si4703.SI4703Constants          import SI4703_POWER_CONFIG_DMUTE_EN, SI4703_POWER_CONFIG_DMUTE_DIS
 from GUIPageManager                  import GUIPageManager
 from Si4703.SI4703Controller         import SI4703Controller
 
@@ -63,11 +64,16 @@ page1.add_back_button()
 
 def p2_button0_callback():
   time.sleep(0.5)
+  radio.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
   radio.user_seek(SI4703_POWER_CONFIG_SEEKUP_UP)
 
-page2         = manager.add_page()
-p2_button0    = page2.add_button("seek", (160, 80), 40, WHITE, call_back = p2_button0_callback)
-page2.add_back_button()
+def p2_back_extra():
+  radio.mute(SI4703_POWER_CONFIG_DMUTE_EN)
+
+page2          = manager.add_page()
+p2_button0     = page2.add_button("seek", (160, 80), 40, WHITE, call_back = p2_button0_callback)
+p2_back_button = page2.add_back_button()
+p2_back_button.extra_callback(p2_back_extra) 
 
 # turn on the manager
 manager.control_enable()

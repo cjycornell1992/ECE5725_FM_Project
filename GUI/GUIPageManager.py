@@ -44,6 +44,8 @@ class GUIPageManager:
           if button != None:
             if button.callBack != None:
               button.callBack()
+            if button.extraCallBack != None:
+              button.extraCallBack()
   
   def turn_to_page(self, page, set_parent = True):
     if (page != None) and (page in self.pages):

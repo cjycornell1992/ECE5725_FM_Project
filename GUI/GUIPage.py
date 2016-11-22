@@ -36,7 +36,9 @@ class GUIPage:
       self.manager.turn_to_page(self.manager.pageDic[self.parentNum], set_parent = False)
 
   def _add_exit_button(self, pos = (280, 180), size = 40, color = RED):
-    self.add_button("exit", pos, size, color, self._exit_callback)
+    button = self.add_button("exit", pos, size, color, self._exit_callback)
+    return button
 
   def add_back_button(self, pos = (280, 210), size = 40, color = CYAN):
-    self.add_button("back", pos, size, color, self._back_callback)
+    button = self.add_button("back", pos, size, color, self._back_callback)
+    return button
