@@ -267,7 +267,7 @@ class SI4703Controller:
     self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
     self._write_sync()
 
-  def user_seek(self, status):
+  def user_seek(self, status, threshold = 30):
     if (status == SI4703_POWER_CONFIG_SEEKUP_UP):
       offset = 0.2
     else:
@@ -283,7 +283,7 @@ class SI4703Controller:
     while (freq != freqStart):
       self.tune(freq)
       time.sleep(0.5)
-      if(self.get_signal_strength() > 30):
+      if(self.get_signal_strength() > threshold):
         break
       freq = freq + offset 
       # assume USA
