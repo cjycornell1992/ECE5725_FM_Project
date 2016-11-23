@@ -214,7 +214,7 @@ class SI4703Controller:
     self._regional_configuration(region)
     self.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
     self.force_mono(SI4703_POWER_CONFIG_MONO_DEFAULT)
-    self.set_volume(100)
+    self.set_volume(50)
     self.seek_preference(SI4703_POWER_CONFIG_SKMODE_DEFAULT, SI4703_POWER_CONFIG_SEEKUP_UP)
     print ("Config succeeds!")
   
@@ -267,7 +267,7 @@ class SI4703Controller:
     self._write_one_reg(SI4703_POWER_CONFIG_ADDR, writeWord)
     self._write_sync()
 
-  def user_seek(self, status):
+  def user_seek(self, status, threshold = 30):
     if (status == SI4703_POWER_CONFIG_SEEKUP_UP):
       offset = 0.2
     else:
@@ -278,19 +278,19 @@ class SI4703Controller:
     if freq > 107.9:
       freq = 87.5
     elif freq < 87.5:
-	  freq = 107.9
+      freq = 107.9
 	  
     while (freq != freqStart):
       self.tune(freq)
-      time.sleep(0.1)
-      if(self.get_signal_strength() > 30):
+      time.sleep(0.5)
+      if(self.get_signal_strength() > threshold):
         break
       freq = freq + offset 
       # assume USA
       if freq > 107.9:
         freq = 87.5
       elif freq < 87.5:
-		freq = 107.9
+        freq = 107.9
 
   def seek(self, status = SI4703_POWER_CONFIG_SEEK_EN):
     if(status != SI4703_POWER_CONFIG_SEEK_EN and status != SI4703_POWER_CONFIG_SEEK_DIS):
@@ -354,5 +354,8 @@ class SI4703Controller:
     self._sync_read_reg()
     rssiWord  = self._read_one_reg(SI4703_STATUS_RSSI_ADDR)
     STValue   = self._extract_bits(rssiWord, SI4703_STATUS_RSSI_ST_MASK, SI4703_STATUS_RSSI_ST_LSB)
+<<<<<<< HEAD
+    return STValue
+=======
     return STValue    
-   
+>>>>>>> si4703-dev
