@@ -33,7 +33,9 @@ class GUIButton:
     self.extraCallBack = None
 
   def update_text(self, text):
-    self.text = text
+    self.text          = text
+    self.surface       = self.font.render(self.text, True, self.color)
+    self.rect          = self.surface.get_rect(center = self.pos)
 
   def extra_callback(self, call_back):
     self.extraCallBack = call_back
