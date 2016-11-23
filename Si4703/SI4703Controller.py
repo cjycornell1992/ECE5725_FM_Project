@@ -354,8 +354,4 @@ class SI4703Controller:
     self._sync_read_reg()
     rssiWord  = self._read_one_reg(SI4703_STATUS_RSSI_ADDR)
     STValue   = self._extract_bits(rssiWord, SI4703_STATUS_RSSI_ST_MASK, SI4703_STATUS_RSSI_ST_LSB)
-<<<<<<< HEAD
-    return STValue
-=======
     return STValue    
->>>>>>> si4703-dev
