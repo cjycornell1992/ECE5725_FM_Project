@@ -11,7 +11,7 @@ from Si4703.SI4703Constants          import SI4703_POWER_CONFIG_DMUTE_EN, SI4703
 from GUI.GUIPageManager              import GUIPageManager
 from Si4703.SI4703Controller         import SI4703Controller
 
-debug = True
+debug = False
 
 if not debug:
   os.putenv('SDL_VIDEODRIVER', 'fbcon')
@@ -128,8 +128,8 @@ def p2_back_extra():
 
 p2_button0     = page2.add_button(">>|", (240, 80), 40, SKY_BLUE, call_back = p2_button0_callback)
 p2_button1     = page2.add_button("|<<", (80, 80), 40, SKY_BLUE, call_back = p2_button1_callback)
-p2_button2     = page2.add_button("+", (240, 120), 50, YELLOW_GREEN, call_back = p2_button2_callback)
-p2_button3     = page2.add_button("-", (80, 120), 50, YELLOW_GREEN, call_back = p2_button3_callback)
+p2_button2     = page2.add_button("+", (240, 120), 80, YELLOW_GREEN, call_back = p2_button2_callback)
+p2_button3     = page2.add_button("-", (80, 120), 80, YELLOW_GREEN, call_back = p2_button3_callback)
 p2_button4     = page2.add_button("Tune", (60, 200), 60, PURPLE, call_back = p2_button4_callback)
 p2_button5     = page2.add_button(">||", (160, 80), 40, SKY_BLUE, call_back = p2_button5_callback)
 
@@ -210,19 +210,19 @@ def p3_button12_callback():
   p3_fre.update_text("---.-")
   tune_fre = ""
 
-p3_button1     = page3.add_button("1", (80, 80), 40, WHITE, call_back = p3_button1_callback)
-p3_button2     = page3.add_button("2", (120, 80), 40, WHITE, call_back = p3_button2_callback)
-p3_button3     = page3.add_button("3", (160, 80), 40, WHITE, call_back = p3_button3_callback)
-p3_button4     = page3.add_button("4", (80, 120), 40, WHITE, call_back = p3_button4_callback)
-p3_button5     = page3.add_button("5", (120, 120), 40, WHITE, call_back = p3_button5_callback)
-p3_button6     = page3.add_button("6", (160, 120), 40, WHITE, call_back = p3_button6_callback)
-p3_button7     = page3.add_button("7", (80, 160), 40, WHITE, call_back = p3_button7_callback)
-p3_button8     = page3.add_button("8", (120, 160), 40, WHITE, call_back = p3_button8_callback)
-p3_button9     = page3.add_button("9", (160, 160), 40, WHITE, call_back = p3_button9_callback)
-p3_button10    = page3.add_button(".", (80, 200), 40, WHITE, call_back = p3_button10_callback)
-p3_button0     = page3.add_button("0", (120, 200), 40, WHITE, call_back = p3_button0_callback)
-p3_button11    = page3.add_button("<-", (160, 200), 40, WHITE, call_back = p3_button11_callback)
-p3_button12    = page3.add_button("Go", (280, 100), 40, WHITE, call_back = p3_button12_callback)
+p3_button1     = page3.add_button("1", (80, 80), 50, WHITE, call_back = p3_button1_callback)
+p3_button2     = page3.add_button("2", (120, 80), 50, WHITE, call_back = p3_button2_callback)
+p3_button3     = page3.add_button("3", (160, 80), 50, WHITE, call_back = p3_button3_callback)
+p3_button4     = page3.add_button("4", (80, 120), 50, WHITE, call_back = p3_button4_callback)
+p3_button5     = page3.add_button("5", (120, 120), 50, WHITE, call_back = p3_button5_callback)
+p3_button6     = page3.add_button("6", (160, 120), 50, WHITE, call_back = p3_button6_callback)
+p3_button7     = page3.add_button("7", (80, 160), 50, WHITE, call_back = p3_button7_callback)
+p3_button8     = page3.add_button("8", (120, 160), 50, WHITE, call_back = p3_button8_callback)
+p3_button9     = page3.add_button("9", (160, 160), 50, WHITE, call_back = p3_button9_callback)
+p3_button10    = page3.add_button(".", (80, 200), 50, WHITE, call_back = p3_button10_callback)
+p3_button0     = page3.add_button("0", (120, 200), 50, WHITE, call_back = p3_button0_callback)
+p3_button11    = page3.add_button("<-", (160, 200), 50, WHITE, call_back = p3_button11_callback)
+p3_button12    = page3.add_button("Go", (280, 100), 50, WHITE, call_back = p3_button12_callback)
 
 # back button
 p3_back_button = page3.add_back_button()
