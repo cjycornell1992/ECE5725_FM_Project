@@ -18,7 +18,6 @@
 from SI4703Constants import *
 from I2CRaw import I2CRaw
 import RPi.GPIO as GPIO
-import smbus
 import time
 import sys
 
