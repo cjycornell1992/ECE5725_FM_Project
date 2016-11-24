@@ -2,6 +2,7 @@ import time
 import os
 import RPi.GPIO as GPIO
 import sys
+
 sys.path.append("..")
 
 from GUI.ColorConstants              import *
@@ -59,11 +60,20 @@ page1         = manager.add_page()
 page1.add_back_button()
 
 ######################################################################################################
-#                                      Receiver page: page2                                          #          
+#                                      Receiver page: page2                                          #
+#                                                                                                    #
+# button0: seekup                                                                                    # 
+# button1: seekdown                                                                                  #
+# button2: volume up                                                                                 #
+# button3: volume down                                                                               #
+# button4: turn to page3                                                                             #
+# p2_fre:  frequency information                                                                     #
+# p2_vol:  volume information                                                                        #          
 ######################################################################################################
 
 fre = 0
 vol = 50
+tune_fre = ""
 page2          = manager.add_page()
 # FM frequency information
 p2_fre         = page2.add_button("---.-", (160, 40), 60, WHITE)
@@ -76,7 +86,7 @@ def p2_button0_callback():
   radio.user_seek(SI4703_POWER_CONFIG_SEEKUP_UP)
   global fre, p2_fre
   fre = radio.get_freq()
-  p2_fre.update_text(str(fre))
+  p2_fre.update_text(str(fre) + "MHz")
 
 def p2_button1_callback():
   time.sleep(0.5)
@@ -84,17 +94,18 @@ def p2_button1_callback():
   radio.user_seek(SI4703_POWER_CONFIG_SEEKUP_DOWN)
   global fre, p2_fre
   fre = radio.get_freq()
-  p2_fre.update_text(str(fre))
+  p2_fre.update_text(str(fre) + "MHz")
 
 def p2_button2_callback():
   global vol, p2_vol
-  vol += 10
+  vol = min(100, vol + 10)
   radio.set_volume(vol)
   p2_vol.update_text(str(vol))
 
 def p2_button3_callback():
   global vol, p2_vol
   vol -= 10
+  vol = max(0, vol - 10)
   radio.set_volume(vol)
   p2_vol.update_text(str(vol))
 
@@ -104,34 +115,110 @@ def p2_button4_callback():
 
 def p2_back_extra():
   radio.mute(SI4703_POWER_CONFIG_DMUTE_EN)  
+  global p2_fre
+  p2_fre.update_text("---.-")
   
 radio.set_volume(vol)
 
 
-# seekup
 p2_button0     = page2.add_button(">>|", (240, 80), 40, WHITE, call_back = p2_button0_callback)
-# seekdown
 p2_button1     = page2.add_button("|<<", (80, 80), 40, WHITE, call_back = p2_button1_callback)
-# volume up
 p2_button2     = page2.add_button("+", (240, 120), 50, WHITE, call_back = p2_button2_callback)
-# volume down
 p2_button3     = page2.add_button("-", (80, 120), 50, WHITE, call_back = p2_button3_callback)
-# GO to page 3, user spicify frequency
 p2_button4     = page2.add_button("Tune", (60, 200), 60, WHITE, call_back = p2_button4_callback)
 
 p2_back_button = page2.add_back_button()
 p2_back_button.extra_callback(p2_back_extra) 
 
 ######################################################################################################
-#                                      Receiver page: page2, user specify the frequency              #          
+#                                      Receiver page: page3, user specify the frequency              #
+# button0~9 number 0~9                                                                               #
+# button10 dot                                                                                       #
+# button11 backspace(delete one digit)                                                               #
+# button12 Go, tune to the fre                                                                       #           
 ######################################################################################################
 page3          = manager.add_page()
-# seekup
-p3_button0     = page3.add_button("Page 3", (60, 200), 40, WHITE)
+p3_fre         = page3.add_button("---.-", (160, 40), 60, WHITE)
+
+def update_tune_fre(num):
+  global tune_fre
+  if len(tune_fre) <= 4:
+    tune_fre += num
+    p3_fre.update_text(tune_fre)
+	
+def p3_button1_callback():
+  update_tune_fre("1")
+
+def p3_button2_callback():
+  update_tune_fre("2")
+
+def p3_button3_callback():
+  update_tune_fre("3")
+
+def p3_button4_callback():
+  update_tune_fre("4")
+
+def p3_button5_callback():
+  update_tune_fre("5")
+
+def p3_button6_callback():
+  update_tune_fre("6")
+
+def p3_button7_callback():
+  update_tune_fre("7")
+
+def p3_button8_callback():
+  update_tune_fre("8")
+
+def p3_button9_callback():
+  update_tune_fre("9")
+
+def p3_button10_callback():
+  global tune_fre
+  if not "." in tune_fre:
+    update_tune_fre(".")
+
+def p3_button0_callback():
+  update_tune_fre("0")
+
+def p3_button11_callback():
+  global tune_fre
+  if len(tune_fre) > 0:
+    tune_fre = tune_fre[0:len(tune_fre) - 1]
+  p3_fre.update_text(tune_fre)
+
+
+def p3_button12_callback():
+  global fre, tune_fre, p2_fre, p3_fre
+  try:
+    fre = float(tune_fre)
+    fre = min(fre, 107.9)
+    fre = max(fre, 87.5)
+    radio.tune(fre)
+    p2_fre.update_text(str(fre))
+    manager.turn_to_page(page2, False)
+  except ValueError:
+    p3_fre.update_text("Invalid value")
+    time.sleep(1)
+  p3_fre.update_text("---.-")
+  tune_fre = ""
+
+p3_button1     = page3.add_button("1", (80, 80), 40, WHITE, call_back = p3_button1_callback)
+p3_button2     = page3.add_button("2", (120, 80), 40, WHITE, call_back = p3_button2_callback)
+p3_button3     = page3.add_button("3", (160, 80), 40, WHITE, call_back = p3_button3_callback)
+p3_button4     = page3.add_button("4", (80, 120), 40, WHITE, call_back = p3_button4_callback)
+p3_button5     = page3.add_button("5", (120, 120), 40, WHITE, call_back = p3_button5_callback)
+p3_button6     = page3.add_button("6", (160, 120), 40, WHITE, call_back = p3_button6_callback)
+p3_button7     = page3.add_button("7", (80, 160), 40, WHITE, call_back = p3_button7_callback)
+p3_button8     = page3.add_button("8", (120, 160), 40, WHITE, call_back = p3_button8_callback)
+p3_button9     = page3.add_button("9", (160, 160), 40, WHITE, call_back = p3_button9_callback)
+p3_button10    = page3.add_button(".", (80, 200), 40, WHITE, call_back = p3_button10_callback)
+p3_button0     = page3.add_button("0", (120, 200), 40, WHITE, call_back = p3_button0_callback)
+p3_button11    = page3.add_button("<-", (160, 200), 40, WHITE, call_back = p3_button11_callback)
+p3_button12    = page3.add_button("Go", (200, 200), 40, WHITE, call_back = p3_button12_callback)
 
 # back button
 p3_back_button = page3.add_back_button()
-
 
 # turn on the manager
 manager.control_enable()
