@@ -39,6 +39,9 @@ def p0_button0_callback():
 def p0_button1_callback():
   manager.turn_to_page(page2)
 
+# page3 -> page2 (after pressing "go" in the keypad)
+# p3_button12_callback
+
 manager    = GUIPageManager(debug = debug)
 
 ######################################################################################################
@@ -49,8 +52,8 @@ manager    = GUIPageManager(debug = debug)
 ######################################################################################################
 
 page0         = manager.add_page()
-p0_button0    = page0.add_button("Transmitter", (160, 80), 40, WHITE, call_back = p0_button0_callback)
-p0_button1    = page0.add_button("Receiver", (160, 140), 40, WHITE, call_back = p0_button1_callback)
+p0_button0    = page0.add_button("Transmitter", (160, 80), 40, CYAN, call_back = p0_button0_callback)
+p0_button1    = page0.add_button("Receiver", (160, 140), 40, CYAN, call_back = p0_button1_callback)
 
 ######################################################################################################
 #                                     Transmitter page: page1                                        #          
@@ -74,11 +77,12 @@ page1.add_back_button()
 fre = 0
 vol = 50
 tune_fre = ""
+mute_flag = SI4703_POWER_CONFIG_DMUTE_DIS
 page2          = manager.add_page()
 # FM frequency information
-p2_fre         = page2.add_button("---.-", (160, 40), 60, WHITE)
+p2_fre         = page2.add_button("---.-", (160, 40), 60, SKY_BLUE)
 # volume information
-p2_vol         = page2.add_button(str(vol), (160, 120), 50, WHITE)
+p2_vol         = page2.add_button("Vol:" + str(vol), (160, 120), 50, YELLOW_GREEN)
 
 def p2_button0_callback():
   time.sleep(0.5)
@@ -100,32 +104,34 @@ def p2_button2_callback():
   global vol, p2_vol
   vol = min(100, vol + 10)
   radio.set_volume(vol)
-  p2_vol.update_text(str(vol))
+  p2_vol.update_text("Vol:" + str(vol))
 
 def p2_button3_callback():
   global vol, p2_vol
-  vol -= 10
   vol = max(0, vol - 10)
   radio.set_volume(vol)
-  p2_vol.update_text(str(vol))
+  p2_vol.update_text("Vol:" + str(vol))
 
 def p2_button4_callback():
   manager.turn_to_page(page3)
 
+def p2_button5_callback():
+  global mute_flag
+  mute_flag = (mute_flag + 1) % 2
+  print mute_flag
+  radio.mute(mute_flag)
 
 def p2_back_extra():
   radio.mute(SI4703_POWER_CONFIG_DMUTE_EN)  
   global p2_fre
   p2_fre.update_text("---.-")
-  
-radio.set_volume(vol)
 
-
-p2_button0     = page2.add_button(">>|", (240, 80), 40, WHITE, call_back = p2_button0_callback)
-p2_button1     = page2.add_button("|<<", (80, 80), 40, WHITE, call_back = p2_button1_callback)
-p2_button2     = page2.add_button("+", (240, 120), 50, WHITE, call_back = p2_button2_callback)
-p2_button3     = page2.add_button("-", (80, 120), 50, WHITE, call_back = p2_button3_callback)
-p2_button4     = page2.add_button("Tune", (60, 200), 60, WHITE, call_back = p2_button4_callback)
+p2_button0     = page2.add_button(">>|", (240, 80), 40, SKY_BLUE, call_back = p2_button0_callback)
+p2_button1     = page2.add_button("|<<", (80, 80), 40, SKY_BLUE, call_back = p2_button1_callback)
+p2_button2     = page2.add_button("+", (240, 120), 50, YELLOW_GREEN, call_back = p2_button2_callback)
+p2_button3     = page2.add_button("-", (80, 120), 50, YELLOW_GREEN, call_back = p2_button3_callback)
+p2_button4     = page2.add_button("Tune", (60, 200), 60, PURPLE, call_back = p2_button4_callback)
+p2_button5     = page2.add_button(">||", (160, 80), 40, SKY_BLUE, call_back = p2_button5_callback)
 
 p2_back_button = page2.add_back_button()
 p2_back_button.extra_callback(p2_back_extra) 
@@ -194,9 +200,10 @@ def p3_button12_callback():
     fre = float(tune_fre)
     fre = min(fre, 107.9)
     fre = max(fre, 87.5)
+    radio.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
     radio.tune(fre)
-    p2_fre.update_text(str(fre))
-    manager.turn_to_page(page2, False)
+    p2_fre.update_text(str(fre) + "MHz")
+    manager.turn_to_page(page2, set_parent = False)
   except ValueError:
     p3_fre.update_text("Invalid value")
     time.sleep(1)
@@ -215,7 +222,7 @@ p3_button9     = page3.add_button("9", (160, 160), 40, WHITE, call_back = p3_but
 p3_button10    = page3.add_button(".", (80, 200), 40, WHITE, call_back = p3_button10_callback)
 p3_button0     = page3.add_button("0", (120, 200), 40, WHITE, call_back = p3_button0_callback)
 p3_button11    = page3.add_button("<-", (160, 200), 40, WHITE, call_back = p3_button11_callback)
-p3_button12    = page3.add_button("Go", (200, 200), 40, WHITE, call_back = p3_button12_callback)
+p3_button12    = page3.add_button("Go", (280, 100), 40, WHITE, call_back = p3_button12_callback)
 
 # back button
 p3_back_button = page3.add_back_button()
