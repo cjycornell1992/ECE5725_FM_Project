@@ -11,7 +11,7 @@ from Si4703.SI4703Constants          import SI4703_POWER_CONFIG_DMUTE_EN, SI4703
 from GUI.GUIPageManager              import GUIPageManager
 from Si4703.SI4703Controller         import SI4703Controller
 
-debug = False
+debug = True
 
 if not debug:
   os.putenv('SDL_VIDEODRIVER', 'fbcon')
@@ -58,9 +58,16 @@ p0_button1    = page0.add_button("Receiver", (160, 140), 40, CYAN, call_back = p
 ######################################################################################################
 #                                     Transmitter page: page1                                        #          
 ######################################################################################################
+tune_fre = ""
+transmitter_fre = 0
+def p1_button0_callback():
+  manager.turn_to_page(page3)
+
 
 page1         = manager.add_page()
+p1_button0    = page1.add_button("Tune", (60, 200), 60, PURPLE, call_back = p1_button0_callback)
 page1.add_back_button()
+
 
 ######################################################################################################
 #                                      Receiver page: page2                                          #
@@ -74,9 +81,8 @@ page1.add_back_button()
 # p2_vol:  volume information                                                                        #          
 ######################################################################################################
 
-fre = 0
+receiver_fre = 0
 vol = 50
-tune_fre = ""
 mute_flag = SI4703_POWER_CONFIG_DMUTE_DIS
 page2          = manager.add_page()
 # FM frequency information
@@ -88,17 +94,17 @@ def p2_button0_callback():
   time.sleep(0.5)
   radio.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
   radio.user_seek(SI4703_POWER_CONFIG_SEEKUP_UP)
-  global fre, p2_fre
-  fre = radio.get_freq()
-  p2_fre.update_text(str(fre) + "MHz")
+  global receiver_fre, p2_fre
+  receiver_fre = radio.get_freq()
+  p2_fre.update_text(str(receiver_fre) + "MHz")
 
 def p2_button1_callback():
   time.sleep(0.5)
   radio.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
   radio.user_seek(SI4703_POWER_CONFIG_SEEKUP_DOWN)
-  global fre, p2_fre
-  fre = radio.get_freq()
-  p2_fre.update_text(str(fre) + "MHz")
+  global receiver_fre, p2_fre
+  receiver_fre = radio.get_freq()
+  p2_fre.update_text(str(receiver_fre) + "MHz")
 
 def p2_button2_callback():
   global vol, p2_vol
@@ -148,6 +154,7 @@ p3_fre         = page3.add_button("---.-", (160, 40), 60, WHITE)
 
 def update_tune_fre(num):
   global tune_fre
+  print tune_fre
   if len(tune_fre) <= 4:
     tune_fre += num
     p3_fre.update_text(tune_fre)
@@ -195,15 +202,22 @@ def p3_button11_callback():
 
 
 def p3_button12_callback():
-  global fre, tune_fre, p2_fre, p3_fre
+  global receiver_fre, tune_fre, p2_fre, p3_fre, transmitter_fre
   try:
     fre = float(tune_fre)
     fre = min(fre, 107.9)
     fre = max(fre, 87.5)
-    radio.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
-    radio.tune(fre)
-    p2_fre.update_text(str(fre) + "MHz")
-    manager.turn_to_page(page2, set_parent = False)
+    if page3.parentNum == 1:
+	# set the transmitter frequency
+      transmitter_fre = fre
+      manager.turn_to_page(page1, set_parent = False)
+    elif page3.parentNum == 2:
+      # set the receiver frequency
+      receiver_fre = fre
+      radio.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
+      radio.tune(receiver_fre)
+      p2_fre.update_text(str(receiver_fre) + "MHz")
+      manager.turn_to_page(page2, set_parent = False)
   except ValueError:
     p3_fre.update_text("Invalid value")
     time.sleep(1)
@@ -235,11 +249,11 @@ while manager.on:
     #time.sleep(1)
     manager.render()
   except KeyboardInterrupt:
-    break
+    manager.control_disable()
   except IOError:
     pass
 
-GPIO.cleanup()
+GPIO.cleanup() 
 radio._i2c.close()
 print "script exited"
 
