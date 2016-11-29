@@ -45,27 +45,40 @@
 #
 #################################################################################################
 
+from FormatSummerizer import FormatSummerizer
+
 class PCMWaveHeader:
   
   def __init__(self):
-    self.chunkID        = ""
-    self.chunkSize     = 0
-    self.format         = ""
-    self.subchunk1ID    = ""
-    self.subchunk1Size  = 0
-    self.audioFormat    = 0
-    self.numChannels    = 0
-    self.sampleRate     = 0
-    self.byteRate       = 0
-    self.blockAlign     = 0
-    self.bitsPerSample  = 0
-    self.subchunk2ID    = ""
-    self.subchunk2Size  = 0
+    self.chunkID          = ""
+    self.chunkSize        = 0
+    self.format           = ""
+    self.subchunk1ID      = ""
+    self.subchunk1Size    = 0
+    self.audioFormat      = 0
+    self.numChannels      = 0
+    self.sampleRate       = 0
+    self.byteRate         = 0
+    self.blockAlign       = 0
+    self.bitsPerSample    = 0
+    self.subchunk2ID      = ""
+    self.subchunk2Size    = 0
+    self.formatSummerizer = None
   
   def _chunkStat(self):
-    print "chunk ID = {}".format(self.chunkID)
-    print "chunk size = {} KB".format((self.chunkSize >> 10))
     print "format = {}".format(self.format)
 
+  def _subchunk1Stat(self):
+    print "{}".format("mono" if self.numChannels == 1 else "stereo")
+    print "Sample Rate: {} KHz".format((self.sampleRate / 1000))
+    print "Bits Per Sample: {}".format(self.bitsPerSample)
+
   def stat(self):
-  	self._chunkStat()
+    self._chunkStat()
+    self._subchunk1Stat()
+
+  def _setFormatSummerizer(self):
+    self.formatSummerizer = FormatSummerizer(self.numChannels, self.bitsPerSample, self.sampleRate)
+
+  def getFormatSummerizer(self):
+    return self.formatSummerizer

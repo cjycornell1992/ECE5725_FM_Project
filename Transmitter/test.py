@@ -43,29 +43,13 @@
 #
 #################################################################################################
 
-# import struct
-
-# with open("star_wars.wav","rb") as wavFile:
-#   buf       = wavFile.read(12)
-#   chunkID   = buf[0:4]
-#   print type(chunkID)
-#   print chunkID
-#   # letters big endian, numbers little endian
-#   chunkSize = struct.unpack('<I', buf[4:8])[0]
-#   print type(chunkSize)
-#   print chunkSize
-#   fmt       = buf[8:12]
-#   print type(fmt)
-#   print fmt
-
-#   print "hello"
-
 from WaveReader          import WaveReader
 from WaveReaderException import WaveReaderException
 
 try:
-  reader = WaveReader("star_wars.wav")
+  reader = WaveReader("wav/star_wars.wav")
   reader.init()
+  reader.stat()
   reader.close()
 except WaveReaderException, error:
   print "Error: {}".format(error)
