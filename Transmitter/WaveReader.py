@@ -132,7 +132,7 @@ class WaveReader:
 
   def _getSubchunk2(self):
     try:
-      subchunk2Data = self.wavFile.read()
+      subchunk2Data = self.wavFile.read(SUBCHUNK2_META_SIZE)
       self.header.subchunk2ID   = subchunk2Data[SUBCHUNK2_ID_OFFSET : SUBCHUNK2_SIZE_OFFSET]
       self.header.subchunk2Size = struct.unpack('<I', subchunk2Data[SUBCHUNK2_SIZE_OFFSET : SUBCHUNK2_META_SIZE])[0]
     except:
@@ -141,3 +141,78 @@ class WaveReader:
   def _checkSubchunk2(self):
     if(self.header.subchunk2ID != PCM_SUBCHUNK2_ID):
       raise WaveReaderException("Error: subchunk2 does not begin with data")
+
+
+  """
+  Get one sample from the wave file, No parameter is explicitly passed in, but below are fields serve
+  as input, and you might find that useful:
+  
+  self.wavFile ---- The file descriptor of the file, you can do self.wavFile.read(N) to read N bytes of data out
+  the data read out is in str raw data, you need to unpack that. Read python struct pack/unpack for more infomation
+  https://docs.python.org/2/library/struct.html
+  
+  self.dataBlockSize ---- The current size (in bytes) of the audio data still unread in the file. REMEMBER to UPDATE
+  THIS FIELD after you get one sample of the audio data
+
+  self.getFormatSummerizer() ---- This gives a summarizer about the format of the audio file. See FormatSummerizer class
+  for more information.
+
+  For each sample, you might need to process 1 ~ 4 byte, depending on the format of the audio, format summerizer block align field
+  tells you how many bytes you need to read for each sample (including all channels). You need to consider the following 4 cases:
+  single channel, 8 bit per sample
+  double channel, 8 bit per sample
+  single channel, 16 bit per sample
+  double channel, 16 bit per sample
+  Number of channels and bits/sample could be found in the format summerizer class
+  data packing for the above 4 cases could be found at http://www.neurophys.wisc.edu/auditory/riff-format.txt
+
+  After reading corresponding bits out, scale that to 0 ~ 1
+
+  Example: single channel, 8 bit per sample, read one byte out, unpack, found this is 127, because one byte is 0 ~ 255, this value
+  should be 127/255, return 0.5
+
+  For double channels, remember to take the average value.
+
+  For 16-bit number, remember to add a DC offset to the signed integer so -32768 ~ 32767 gets converted to 0 ~ 1 instead of -1 ~ 1.
+
+  Example: -32768 should not be scaled to 1, it should be scaled to 0. 0 should not be scaled to 0, it should be scaled to 0.5
+
+  return: a float number 0 ~ 1 that is the scaled data of one sample  
+
+  """
+  def getOneSample(self):
+    # Zhenchuan TODO
+  	pass
+
+  """
+  Deciding If you can still read at least one more sample. Again, this has no input parameter, but you might want to modify following fields:
+
+  self.dataBlockSize --- The current number of data still unread, in bytes
+  blockalign field in the format summerizer, this tells you how many bytes per sample (includig all channels)
+  
+  Return:
+  True  if current dataBlockSize is less than one sample
+  False if you can still read at least one sample
+  """
+  def isEnd(self):
+  	# Zhenchuan TODO
+  	pass
+
+  """
+  Skip number of samples in the file
+  
+  Input: num_samples
+
+  Fields might be useful:
+  self.wavFile ---- The file descriptor of wav file. Use tell / seek to do that. https://docs.python.org/2/tutorial/inputoutput.html
+
+  self.dataBlockSize ---- Remember to update this field after skip several samples
+
+  return
+  True  if you can skip this number of samples, and it succeeds
+  False if the num of sample you want to skip exceeds the current data block size
+  """
+  def skipSamples(self, num_samples):
+  	# Zhenchuan TODO
+  	pass
+

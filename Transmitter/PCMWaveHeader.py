@@ -78,7 +78,7 @@ class PCMWaveHeader:
     self._subchunk1Stat()
 
   def _setFormatSummerizer(self):
-    self.formatSummerizer = FormatSummerizer(self.numChannels, self.bitsPerSample, self.sampleRate)
+    self.formatSummerizer = FormatSummerizer(self.numChannels, self.bitsPerSample, self.sampleRate, self.blockAlign)
 
   def getFormatSummerizer(self):
     return self.formatSummerizer
