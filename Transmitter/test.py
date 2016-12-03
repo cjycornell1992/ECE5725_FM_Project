@@ -47,14 +47,16 @@ from WaveReader          import WaveReader
 from WaveReaderException import WaveReaderException
 
 try:
-  reader = WaveReader("wav/star_wars.wav")
+  reader = WaveReader("wav/bird.wav")
   reader.init()
   reader.stat()
+  """
   reader.getOneSample()
-  while reader.skipSamples(1000):
+  while not reader.skipSamples(1000):
     pass
   print reader.isEnd()
   print reader.dataBlockSize
+  """
   while not reader.isEnd():
     print reader.getOneSample()
 

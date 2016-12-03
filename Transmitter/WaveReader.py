@@ -165,7 +165,6 @@ class WaveReader:
 
   """
   def getOneSample(self):
-    # Zhenchuan TODO
     if self.isEnd():
       raise WaveReaderException("Error in getOneSample: remained data size not enough for one sample")
     formatSummerizer = self.getFormatSummerizer()
@@ -191,13 +190,14 @@ class WaveReader:
 			# 16 bit, 1 channel
 			# content[0]: low byte; content[1]: high byte; can use unpack directly
             val = struct.unpack('<h', content)[0]
-            val = (val + 32768.0) / (32767 * 2.0)
+            #val = (val + 32768.0) / (32767 * 2.0)
+            val = (val + 32768.0) / float(32767 << 1)
         else:
 			# 32 bits total, 2 channel
 			# first 16 bits for sample 1, second 16 bits for sample 2, little endian
             val0, val1 = struct.unpack('<hh', content)
-            # Do not shift on val because there is no arithmetic shift in python
-            val = (((val0 + val1) / 2.0) + 32768.0) / (32767 * 2.0)            
+            #val = (((val0 + val1) / 2.0) + 32768.0) / (32767 * 2.0)
+            val = (((val0 >> 2) + (val1 >> 2)) + (32768 >> 1)) / float(32767)           
     return val
   	  	
   """
