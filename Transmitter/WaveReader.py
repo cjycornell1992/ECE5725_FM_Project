@@ -182,7 +182,46 @@ class WaveReader:
   """
   def getOneSample(self):
     # Zhenchuan TODO
-  	pass
+    formatSummerizer = self.getFormatSummerizer()
+    bytePerSample = formatSummerizer.blockAlign
+    channelNum = formatSummerizer.numChannels
+    content = self.wavFile.read(bytePerSample)
+    self.dataBlockSize -= bytePerSample
+    val = 0
+    if bytePerSample == 1:
+        if channelNum == 1:
+            # 8 bit, 1 channel
+            val = struct.unpack('B', content[0])
+            val = val / 255.0
+        else:
+            # 8 bit, 2 channel
+            # get value of first 4 bits and second 4 bits
+            val = struct.unpack('B', content[0])
+            c0 = val >> 4
+            c1 = (val << 4) >> 4
+            val = (c0 + c1) / 2.0 / 127.0 
+    else:
+        if channelNum == 1:
+			# 16 bit, 1 channel
+			# content[0]: low byte; content[1]: high byte; can use unpack directly
+            val = struct.unpack('h', content)[0]
+            val = (val + 32768.0) / (32767 * 2)
+        else:
+			# 16 bit, 2 channel
+			# first 4 bits are low order, second 4 bits are high order
+			# need to extract 4 bits seperately and then add two value
+            val0 = struct.unpack('B', content[0])
+            c01 = val0 >> 4
+            c02 = val0 << 4
+            c0 = c01 + c02
+            val1 = struct.unpack('B', content[1])
+            c11 = val1 >> 4
+            c12 = val1 << 4
+            c1 = c11 + c12
+            val = (c0 + c1) / 2.0 / 255.0
+    return val
+  	
+  	
 
   """
   Deciding If you can still read at least one more sample. Again, this has no input parameter, but you might want to modify following fields:
@@ -196,7 +235,9 @@ class WaveReader:
   """
   def isEnd(self):
   	# Zhenchuan TODO
-  	pass
+    formatSummerizer = self.getFormatSummerizer()
+    bytePerSample = formatSummerizer.blockAlign
+    return self.dataBlockSize < bytePerSample
 
   """
   Skip number of samples in the file
@@ -214,5 +255,13 @@ class WaveReader:
   """
   def skipSamples(self, num_samples):
   	# Zhenchuan TODO
-  	pass
+    formatSummerizer = self.getFormatSummerizer()
+    bytePerSample = formatSummerizer.blockAlign
+    if self.dataBlockSize < bytePerSample * num_samples:
+        return False    
+    cur = self.wavFile.tell()
+    des = cur + bytePerSample * num_samples
+    self.wavFile.seek(des)
+    self.dataBlockSize -= bytePerSample * num_samples
+    return True
 
