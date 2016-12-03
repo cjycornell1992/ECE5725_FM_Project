@@ -52,16 +52,18 @@ import struct
 class WaveReader:
   
   def __init__(self, filename):
-    self.filename      = filename
-    self.wavFile       = None
-    self.header        = None
-    self.dataBlockSize = 0
+    self.filename       = filename
+    self.wavFile        = None
+    self.header         = None
+    self.dataBlockSize  = 0
+    self.dataBlockStart = 0
 
   def init(self):
     try:
       self.wavFile = open(self.filename, "rb")
       self._getPCMWaveHeader()
-      self.dataBlockSize = self.header.subchunk2Size
+      self.dataBlockSize  = self.header.subchunk2Size
+      self.dataBlockStart = self.wavFile.tell()
 
     except IOError, error:
       print "IOError : {}".format(error)
