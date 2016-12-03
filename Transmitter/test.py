@@ -51,12 +51,13 @@ try:
   reader.init()
   reader.stat()
   reader.getOneSample()
-  while not reader.skipSamples(1000):
+  while reader.skipSamples(1000):
     pass
   print reader.isEnd()
   print reader.dataBlockSize
   while not reader.isEnd():
     print reader.getOneSample()
+
   reader.close()
 except WaveReaderException, error:
   print "Error: {}".format(error)
