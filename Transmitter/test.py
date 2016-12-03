@@ -57,9 +57,6 @@ try:
   print reader.isEnd()
   print reader.dataBlockSize
   """
-  while not reader.isEnd():
-    print reader.getOneSample()
-
   reader.close()
 except WaveReaderException, error:
   print "Error: {}".format(error)

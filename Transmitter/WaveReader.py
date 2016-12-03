@@ -57,6 +57,7 @@ class WaveReader:
     self.header         = None
     self.dataBlockSize  = 0
     self.dataBlockStart = 0
+    self.wholeDataSize  = 0
 
   def init(self):
     try:
@@ -64,6 +65,7 @@ class WaveReader:
       self._getPCMWaveHeader()
       self.dataBlockSize  = self.header.subchunk2Size
       self.dataBlockStart = self.wavFile.tell()
+      self.wholeDataSize  = self.dataBlockSize
 
     except IOError, error:
       print "IOError : {}".format(error)
@@ -229,11 +231,14 @@ class WaveReader:
   def skipTo(self, dest_sample_index):
     formatSummerizer = self.getFormatSummerizer()
     bytePerSample = formatSummerizer.blockAlign
-    if self.dataBlockSize < bytePerSample * num_samples:
-        return False    
-    cur = self.wavFile.tell()
-    des = cur + bytePerSample * num_samples
-    self.wavFile.seek(des)
-    self.dataBlockSize -= bytePerSample * num_samples
+    dest_byte_index = bytePerSample * dest_sample_index
+    # the destination byte is beyond the file size
+    if dest_byte_index > self.wholeDataSize:
+      return False
+    # reset unread block size
+    self.dataBlockSize = self.wholeDataSize
+    # move to the destination byte
+    self.wavFile.seek(self.dataBlockStart + dest_byte_index)
+    self.dataBlockSize -= dest_byte_index
     return True
 
