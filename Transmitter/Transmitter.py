@@ -127,11 +127,11 @@ class Transmitter:
   def _getCurrentTime(self):
     return (self._read32bits(SYS_TIMER_HIGH32_BASE) << 32) + self._read32bits(SYS_TIMER_LOW32_BASE)
     
-  def transmit(self):
+  def transmit(self, force_start_time = 0):
     self.busy  = True
     formatSummerizer = self.reader.getFormatSummerizer()
     sampleRate = formatSummerizer.sampleRate
-    startTime  = self._getCurrentTime()
+    startTime  = force_start_time if force_start_time != 0 else self._getCurrentTime()
     modulator  = Thread(target = self._modulate, args = (startTime, sampleRate))
     modulator.start()
 
@@ -143,16 +143,67 @@ class Transmitter:
       # index = t * sampleRate
       sampleIndex = int((duration / 1e6) * sample_rate)
       if self.reader.skipTo(sampleIndex):
-        sample       = self.reader.getOneSample()
+        sample    = self.reader.getOneSample()
         self._setup_deviation(sample)
       else:
         break
   
     self.busy = False
+
+
+  """
+    update the base frequency of the carrier wave
+    input : frequency number, in MHz
+    
+    note: the frequency is only valid between 87.5 ~ 108
+    any frequency greater than 108 would be rounded down to 108
+    any frequency less than 87.5 would be rounded up to 87.5
+  """
+  def updateCarrierFrequency(self, freq_mhz):
+    if (freq_mhz > 108):
+      self.carrierFreq = 108
+    elif (freq_mhz < 87.5):
+      self.carrierFreq = 87.5
+
+    self._setupCarrier(freq_mhz)
+
+  """
+    start a new transcation
+    input: filename
+    
+    note: please call this job when a previous transcation has ended
+          1. you can call stop to force the previous transcation to stop
+          2. you can poll self.busy field and wait until the previous transcation naturally ends 
+  """
+  def newJob(self, filename):
+    self.reader = WaveReader(filename)
+    self.reader.init()      
   
-  def close(self):
+  """ forcibaly stop the current transcation, not able to resume """
+  def stop(self):
     self.busy = False
     # sleep 0.1 second, wait for the exit of modulate thread
     time.sleep(0.1)
-    self.reader.close()
+    if(self.reader != None):
+      self.reader.close()
+
+  """ Pause the current transcation, able to resume """
+  def pause(self):
+    self.busy = False
+    # sleep 0.1 second, wait for the exit of modulate thread
+    time.sleep(0.1)
+  
+  """ resume a paused transcation, resume a running transaction might have undefined behaviour """  
+  def resume(self):
+    formatSummerizer = self.reader.getFormatSummerizer()
+    sampleRate       = formatSummerizer.sampleRate
+    sampleConsumed   = self.reader.sampleConsumed()
+    # duration in us
+    duration         = int((sampleConsumed / float(sampleRate)) * 1e6)
+    startTime        = self._getCurrentTime() - duration
+    self.transmit(startTime)
+  
+  """ Close the entire transmitter device, only call this as a cleanup """  
+  def close(self):
+    self.stop()
     self.peripheral.close()  

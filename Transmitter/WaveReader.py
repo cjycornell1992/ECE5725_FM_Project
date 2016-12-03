@@ -242,6 +242,11 @@ class WaveReader:
     self.dataBlockSize -= dest_byte_index
     return True
 
+  def sampleConsumed(self):
+    formatSummerizer = self.getFormatSummerizer()
+    bytePerSample = formatSummerizer.blockAlign
+    return (self.wavFile.tell() - self.dataBlockStart) / bytePerSample
+
   def close(self):
     self.wavFile.close()
 
