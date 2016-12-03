@@ -43,6 +43,7 @@
 #
 #################################################################################################
 import time
+import sys
 from Transmitter import Transmitter
 
 transmitter = Transmitter(100.0, "wav/bird.wav")
@@ -54,7 +55,23 @@ while transmitter.busy:
   try:
     time.sleep(1)
   except KeyboardInterrupt:
-    break
+    transmitter.close()
+    sys.exit(0)
+    
+transmitter.newJob("wav/star_wars.wav")
+transmitter.reader.stat()
+transmitter.transmit()
 
+while transmitter.busy:
+  try:
+    for i in range(5):
+      time.sleep(2)
+      transmitter.pause()
+      time.sleep(2)
+      transmitter.resume()
+    print "ready to stop"
+    transmitter.stop()
+  except KeyboardInterrupt:
+    break
 
 transmitter.close()
