@@ -72,6 +72,7 @@ class PCMWaveHeader:
     print "{}".format("mono" if self.numChannels == 1 else "stereo")
     print "Sample Rate: {} KHz".format((self.sampleRate / 1000))
     print "Bits Per Sample: {}".format(self.bitsPerSample)
+    print "Block Align: {} bytes per sample including all channels".format(self.blockAlign)
 
   def stat(self):
     self._chunkStat()
