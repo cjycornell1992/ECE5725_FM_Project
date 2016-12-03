@@ -44,6 +44,7 @@
 #################################################################################################
 from BCM2836Constants import *
 from WaveReader       import WaveReader
+from threading        import Thread
 import mmap
 import struct
 import math
@@ -124,23 +125,23 @@ class Transmitter:
     self._write32bits(CM_GP0DIV_BASE, clk0_div_reg)
 
   def _getCurrentTime(self):
-    return self._read32bits(SYS_TIMER_LOW32_BASE)
+    return (self._read32bits(SYS_TIMER_HIGH32_BASE) << 32) + self._read32bits(SYS_TIMER_LOW32_BASE)
     
   def transmit(self):
     self.busy = True
     startTime = self._getCurrentTime()
-    self.modulate(startTime)
+    self._modulate(startTime)
     self.busy = False
 
-  def modulate(self, start_time):
+  def _modulate(self, start_time):
     duration    = self._getCurrentTime() - start_time
-    sampleIndex = self.reader.skip
-    
+    # time value is in us
+    # duaration in second t = duration / 10^6 us
+    # index = t * sampleRate
+    sampleIndex = int((duration / 10e6) * sampleRate)
+    self.reader.skipTo(sampleIndex)
     sample       = self.reader.getOneSample()
     self._setup_deviation(sample)
-    # time loss in us
-    timeLoss   = self._getCurrentTime() - startTime()
-    lostSample = self.
   
   def close(self):
     self.peripheral.close()
