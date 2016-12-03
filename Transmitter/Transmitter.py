@@ -43,30 +43,35 @@
 #
 #################################################################################################
 from BCM2836Constants import *
+from WaveReader       import WaveReader
 import mmap
 import struct
 import math
 
 class Transmitter:
 
-  def __init__(self, carrier_freq):
+  def __init__(self, carrier_freq, filename):
     self.peripheral  = None
     self.carrierFreq = carrier_freq
+    self.reader      = WaveReader(filename)
+    self.busy        = False
   
   def init(self):
     try:
       memf = open("/dev/mem", "r+b")
       self.peripheral = mmap.mmap(memf.fileno(), PERIPHERAL_LEN, offset = PERIPHERAL_BASE)
+      print "self.peripheral = {}".format(self.peripheral)
       self._setupGPIO()
       self._setupCLK0()
       self._setupCarrier(self.carrierFreq)
+      self.reader.init()
       
     except IOError, error:    
       print "IOError : {}".format(error)
 
   def _setupGPIO(self):
     gpio_reg = self._read32bits(GPFSEL0_BASE)
-    gpio_reg = (gpio_reg & GPFSEL0_FSEL4_MASK) | (GPFSEL0_FSEL4_GPCLK0)
+    gpio_reg = (gpio_reg & GPFSEL0_FSEL4_MASK) | (GPFSEL0_FSEL4_GPCLK0)     
     self._write32bits(GPFSEL0_BASE, gpio_reg)
 
   def _read32bits(self, base_addr):
@@ -117,6 +122,25 @@ class Transmitter:
     clk0_div_reg = self._read32bits(CM_GP0DIV_BASE)
     clk0_div_reg = (clk0_div_reg & CM_GP0DIV_DIVF_MASK) | CM_GP0DIV_PASSWD | divf
     self._write32bits(CM_GP0DIV_BASE, clk0_div_reg)
+
+  def _getCurrentTime(self):
+    return self._read32bits(SYS_TIMER_LOW32_BASE)
+    
+  def transmit(self):
+    self.busy = True
+    startTime = self._getCurrentTime()
+    self.modulate(startTime)
+    self.busy = False
+
+  def modulate(self, start_time):
+    duration    = self._getCurrentTime() - start_time
+    sampleIndex = self.reader.skip
+    
+    sample       = self.reader.getOneSample()
+    self._setup_deviation(sample)
+    # time loss in us
+    timeLoss   = self._getCurrentTime() - startTime()
+    lostSample = self.
   
   def close(self):
     self.peripheral.close()

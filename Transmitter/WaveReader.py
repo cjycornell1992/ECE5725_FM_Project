@@ -224,7 +224,7 @@ class WaveReader:
   True  if you can skip this number of samples, and it succeeds
   False if the num of sample you want to skip exceeds the current data block size
   """
-  def skipSamples(self, num_samples):
+  def skipTo(self, dest_sample_index):
     formatSummerizer = self.getFormatSummerizer()
     bytePerSample = formatSummerizer.blockAlign
     if self.dataBlockSize < bytePerSample * num_samples:
