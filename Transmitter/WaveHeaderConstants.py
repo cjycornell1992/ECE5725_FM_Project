@@ -45,10 +45,45 @@
 #
 #################################################################################################
 
-CHUNK_DESCRIPTOR_SIZE = 12
-CHUNK_ID_OFFSET       = 0
-CHUNK_SIZE_OFFSET     = 4
-CHUNK_FORMAT_OFFSET   = 8
+#################################################################################################
+###                                   Chunk Descriptor                                        ###
+#################################################################################################
 
-PCM_WAVE_CHUNK_ID     = "RIFF"
-PCM_WAVE_FORMAT       = "WAVE"
+# size and offset 
+CHUNK_DESCRIPTOR_SIZE            = 12
+CHUNK_ID_OFFSET                  = 0
+CHUNK_SIZE_OFFSET                = 4
+CHUNK_FORMAT_OFFSET              = 8
+# constants
+PCM_WAVE_CHUNK_ID                = "RIFF"
+PCM_WAVE_FORMAT                  = "WAVE"
+
+#################################################################################################
+###                                       Subchunk 1                                          ###
+#################################################################################################
+
+# size and offset 
+SUBCHUNK1_SIZE                   = 24
+SUBCHUNK1_ID_OFFSET              = 0
+SUBCHUNK1_SIZE_OFFSET            = 4
+SUBCHUNK1_AUDIO_FMT_OFFSET       = 8
+SUBCHUNK1_NUM_CHANS_OFFSET       = 10
+SUBCHUNK1_SAMPLE_RATE_OFFSET     = 12
+SUBCHUNK1_BYTE_RATE_OFFSET       = 16
+SUBCHUNK1_BLOCK_ALIGN_OFFSET     = 20
+SUBCHUNK1_BITS_PER_SAMPLE_OFFSET = 22
+# constants
+PCM_SUBCHUNK1_ID                 = "fmt "
+PCM_SUBCHUNK1_SIZE               = 16
+PCM_AUDIO_FORMAT                 = 1
+
+#################################################################################################
+###                                       Subchunk 2                                          ###
+#################################################################################################
+
+# size and offset
+SUBCHUNK2_META_SIZE              = 8
+SUBCHUNK2_ID_OFFSET              = 0
+SUBCHUNK2_SIZE_OFFSET            = 4 
+# constants
+PCM_SUBCHUNK2_ID                 = "data"

@@ -1,15 +1,16 @@
 #################################################################################################
 # Author: Junyin Chen(jc2954), Yuxiao Kun(xy284), Zhenchuan Pang(zp55)
 #
-# Date: Nov.27 2016
+# Date: Nov.28 2016
 #
-# PCMWaveHeader.py
+# FormatSummerizer.py
 #
-# Description: This class is for describing the header of a PCM Wave File
+# Description: This class is for summerizing the format of a given wav file
+# number of channels, bits/sample and sample rate are 3 key data that are visited
+# frequently in applications.
 #
 # Reference:
-# 1. http://soundfile.sapp.org/doc/WaveFormat/
-# 2.
+# 
 """
     fm_transmitter - use Raspberry Pi as FM transmitter
 
@@ -45,41 +46,10 @@
 #
 #################################################################################################
 
-from FormatSummerizer import FormatSummerizer
+class FormatSummerizer:
 
-class PCMWaveHeader:
-  
-  def __init__(self):
-    self.chunkID          = ""
-    self.chunkSize        = 0
-    self.format           = ""
-    self.subchunk1ID      = ""
-    self.subchunk1Size    = 0
-    self.audioFormat      = 0
-    self.numChannels      = 0
-    self.sampleRate       = 0
-    self.byteRate         = 0
-    self.blockAlign       = 0
-    self.bitsPerSample    = 0
-    self.subchunk2ID      = ""
-    self.subchunk2Size    = 0
-    self.formatSummerizer = None
-  
-  def _chunkStat(self):
-    print "format = {}".format(self.format)
-
-  def _subchunk1Stat(self):
-    print "{}".format("mono" if self.numChannels == 1 else "stereo")
-    print "Sample Rate: {} KHz".format((self.sampleRate / 1000))
-    print "Bits Per Sample: {}".format(self.bitsPerSample)
-    print "Block Align: {} bytes per sample including all channels".format(self.blockAlign)
-
-  def stat(self):
-    self._chunkStat()
-    self._subchunk1Stat()
-
-  def _setFormatSummerizer(self):
-    self.formatSummerizer = FormatSummerizer(self.numChannels, self.bitsPerSample, self.sampleRate, self.blockAlign)
-
-  def getFormatSummerizer(self):
-    return self.formatSummerizer
+  def __init__(self, channel_num, bits_per_sample, sample_rate, block_align):
+        self.numChannels   = channel_num
+        self.bitsPerSample = bits_per_sample
+        self.sampleRate    = sample_rate
+        self.blockAlign    = block_align
