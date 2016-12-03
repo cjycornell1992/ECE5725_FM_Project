@@ -45,6 +45,7 @@
 from BCM2836Constants import *
 from WaveReader       import WaveReader
 from threading        import Thread
+import time
 import mmap
 import struct
 import math
@@ -61,7 +62,6 @@ class Transmitter:
     try:
       memf = open("/dev/mem", "r+b")
       self.peripheral = mmap.mmap(memf.fileno(), PERIPHERAL_LEN, offset = PERIPHERAL_BASE)
-      print "self.peripheral = {}".format(self.peripheral)
       self._setupGPIO()
       self._setupCLK0()
       self._setupCarrier(self.carrierFreq)
@@ -128,20 +128,31 @@ class Transmitter:
     return (self._read32bits(SYS_TIMER_HIGH32_BASE) << 32) + self._read32bits(SYS_TIMER_LOW32_BASE)
     
   def transmit(self):
-    self.busy = True
-    startTime = self._getCurrentTime()
-    self._modulate(startTime)
-    self.busy = False
+    self.busy  = True
+    formatSummerizer = self.reader.getFormatSummerizer()
+    sampleRate = formatSummerizer.sampleRate
+    startTime  = self._getCurrentTime()
+    modulator  = Thread(target = self._modulate, args = (startTime, sampleRate))
+    modulator.start()
 
-  def _modulate(self, start_time):
-    duration    = self._getCurrentTime() - start_time
-    # time value is in us
-    # duaration in second t = duration / 10^6 us
-    # index = t * sampleRate
-    sampleIndex = int((duration / 10e6) * sampleRate)
-    self.reader.skipTo(sampleIndex)
-    sample       = self.reader.getOneSample()
-    self._setup_deviation(sample)
+  def _modulate(self, start_time, sample_rate):
+    while self.busy and not self.reader.isEnd():
+      duration    = self._getCurrentTime() - start_time
+      # time value is in us
+      # duaration in second t = duration / 10^6 us
+      # index = t * sampleRate
+      sampleIndex = int((duration / 1e6) * sample_rate)
+      if self.reader.skipTo(sampleIndex):
+        sample       = self.reader.getOneSample()
+        self._setup_deviation(sample)
+      else:
+        break
+  
+    self.busy = False
   
   def close(self):
-    self.peripheral.close()
+    self.busy = False
+    # sleep 0.1 second, wait for the exit of modulate thread
+    time.sleep(0.1)
+    self.reader.close()
+    self.peripheral.close()  

@@ -233,7 +233,7 @@ class WaveReader:
     bytePerSample = formatSummerizer.blockAlign
     dest_byte_index = bytePerSample * dest_sample_index
     # the destination byte is beyond the file size
-    if dest_byte_index > self.wholeDataSize:
+    if dest_byte_index >= self.wholeDataSize:
       return False
     # reset unread block size
     self.dataBlockSize = self.wholeDataSize
@@ -241,4 +241,7 @@ class WaveReader:
     self.wavFile.seek(self.dataBlockStart + dest_byte_index)
     self.dataBlockSize -= dest_byte_index
     return True
+
+  def close(self):
+    self.wavFile.close()
 

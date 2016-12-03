@@ -45,20 +45,14 @@
 import time
 from Transmitter import Transmitter
 
-transmitter = Transmitter(100.0, "wav/star_wars.wav")
+transmitter = Transmitter(100.0, "wav/bird.wav")
 transmitter.init()
-formatSummerizer = transmitter.reader.getFormatSummerizer()
-sampleRate = formatSummerizer.sampleRate
-print sampleRate
-period = 1.0/sampleRate
+transmitter.reader.stat()
+transmitter.transmit()
 
-a = 0
-while True:
+while transmitter.busy:
   try:
-    time.sleep(period)
-    #a = 0.5 if a == 0 else 0
-    a = transmitter.reader.getOneSample()
-    transmitter._setup_deviation(a)
+    time.sleep(1)
   except KeyboardInterrupt:
     break
 
