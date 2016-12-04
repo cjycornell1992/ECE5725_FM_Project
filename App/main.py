@@ -2,6 +2,7 @@ import time
 import os
 import RPi.GPIO as GPIO
 import sys
+import glob
 
 sys.path.append("..")
 
@@ -10,7 +11,12 @@ from Si4703.SI4703Constants          import SI4703_POWER_CONFIG_SEEKUP_UP, SI470
 from Si4703.SI4703Constants          import SI4703_POWER_CONFIG_DMUTE_EN, SI4703_POWER_CONFIG_DMUTE_DIS
 from GUI.GUIPageManager              import GUIPageManager
 from Si4703.SI4703Controller         import SI4703Controller
+from Transmitter.Transmitter         import Transmitter
+from Transmitter.WaveReaderException import WaveReaderException
 
+######################################################################################################
+#                                          Environment Setup                                         #          
+######################################################################################################
 debug = True
 
 if not debug:
@@ -19,6 +25,9 @@ if not debug:
   os.putenv('SDL_MOUSEDRV', 'TSLIB')
   os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 
+######################################################################################################
+#                                           Receiver Setup                                           #          
+######################################################################################################
 resetPin     = 5
 intPin       = 6
 boardVersion = 2
@@ -26,6 +35,18 @@ GPIO.setmode(GPIO.BCM)
 radio = SI4703Controller(resetPin,intPin,boardVersion)
 radio.power_up()
 radio.config('USA')
+
+######################################################################################################
+#                                          Transmitter Setup                                         #          
+######################################################################################################
+
+""" playList : a list of strings, relative path. 
+    Example: a = glob.glob('../Transmitter/wav/*.wav')
+             a will be ['../Transmitter/wav/bird.wav', '../Transmitter/wav/star_wars.wav']
+"""
+playList    = glob.glob('../Transmitter/wav/*.wav')
+transmitter = Transmitter(100.1, playList[0])
+transmitter.init()
 
 ######################################################################################################
 #                                             Transitions                                            #          
@@ -252,8 +273,11 @@ while manager.on:
     manager.control_disable()
   except IOError:
     pass
+  except WaveReaderException, error:
+    print "error: {}".format(error)
 
 GPIO.cleanup() 
 radio._i2c.close()
+transmitter.close()
 print "script exited"
 
