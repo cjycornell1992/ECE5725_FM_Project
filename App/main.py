@@ -2,7 +2,6 @@ import time
 import os
 import RPi.GPIO as GPIO
 import sys
-import glob
 
 sys.path.append("..")
 
@@ -11,8 +10,7 @@ from Si4703.SI4703Constants          import SI4703_POWER_CONFIG_SEEKUP_UP, SI470
 from Si4703.SI4703Constants          import SI4703_POWER_CONFIG_DMUTE_EN, SI4703_POWER_CONFIG_DMUTE_DIS
 from GUI.GUIPageManager              import GUIPageManager
 from Si4703.SI4703Controller         import SI4703Controller
-from Transmitter.Transmitter         import Transmitter
-from Transmitter.WaveReaderException import WaveReaderException
+from threading                       import Thread
 
 ######################################################################################################
 #                                          Environment Setup                                         #          
@@ -35,18 +33,6 @@ GPIO.setmode(GPIO.BCM)
 radio = SI4703Controller(resetPin,intPin,boardVersion)
 radio.power_up()
 radio.config('USA')
-
-######################################################################################################
-#                                          Transmitter Setup                                         #          
-######################################################################################################
-
-""" playList : a list of strings, relative path. 
-    Example: a = glob.glob('../Transmitter/wav/*.wav')
-             a will be ['../Transmitter/wav/bird.wav', '../Transmitter/wav/star_wars.wav']
-"""
-playList    = glob.glob('../Transmitter/wav/*.wav')
-transmitter = Transmitter(100.1, playList[0])
-transmitter.init()
 
 ######################################################################################################
 #                                             Transitions                                            #          
@@ -79,16 +65,59 @@ p0_button1    = page0.add_button("Receiver", (160, 140), 40, CYAN, call_back = p
 ######################################################################################################
 #                                     Transmitter page: page1                                        #          
 ######################################################################################################
+main2Trans_fifo = "main2Trans_fifo"
 tune_fre = ""
-transmitter_fre = 0
-def p1_button0_callback():
-  manager.turn_to_page(page3)
+playing = False
 
+def write_fifo(instruction):
+  fifo = open(main2Trans_fifo, "w", buffering = 0)
+  fifo.write(instruction)
+  fifo.close()
+
+def get_file_name(filename):
+  return filename[filename.rfind('/') + 1:]
+
+def p1_button1_callback():
+  write_fifo("next")
+
+def p1_button2_callback():
+  write_fifo("prev")
+
+def p1_button3_callback():
+  ins = ""
+  global playing
+  if playing:
+    ins = "pause"
+  else:
+    ins = "resume"
+  playing = not playing
+  write_fifo(ins)
+
+Trans2main_fifo = "Trans2main_fifo"
+def FIFOReceiveHandler():
+  global p1_file_name
+  while True:
+    receive_fifo = open(Trans2main_fifo, "r", buffering = 0) 
+    fileName = receive_fifo.readline()
+    if fileName == "exit":
+      break;
+    p1_file_name.update_text(get_file_name(fileName))
+
+FIFOReceiveCollector = Thread(target = FIFOReceiveHandler)
+FIFOReceiveCollector.start()
+
+def p1_back_extra():
+  write_fifo("pause")
 
 page1         = manager.add_page()
-p1_button0    = page1.add_button("Tune", (60, 200), 60, PURPLE, call_back = p1_button0_callback)
-page1.add_back_button()
+p1_file_name  = page1.add_button("No file", (160, 40), 60, SKY_BLUE)
+p1_fre        = page1.add_button("99.9MHz",(160, 80), 60, SKY_BLUE)
+p1_button1    = page1.add_button(">>|", (240, 120), 60, YELLOW_GREEN, call_back = p1_button1_callback)
+p1_button2    = page1.add_button("|<<", (80, 120), 60, YELLOW_GREEN, call_back = p1_button2_callback)
+p1_button3    = page1.add_button(">||", (160, 120), 60, YELLOW_GREEN, call_back = p1_button3_callback)
 
+p1_back_button = page1.add_back_button()
+p1_back_button.extra_callback(p1_back_extra) 
 
 ######################################################################################################
 #                                      Receiver page: page2                                          #
@@ -114,7 +143,7 @@ p2_vol         = page2.add_button("Vol:" + str(vol), (160, 120), 50, YELLOW_GREE
 def p2_button0_callback():
   time.sleep(0.5)
   radio.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
-  radio.user_seek(SI4703_POWER_CONFIG_SEEKUP_UP)
+  radio.user_seek(SI4703_POWER_CONFIG_SEEKUP_UP, threshold = 25)
   global receiver_fre, p2_fre
   receiver_fre = radio.get_freq()
   p2_fre.update_text(str(receiver_fre) + "MHz")
@@ -228,17 +257,12 @@ def p3_button12_callback():
     fre = float(tune_fre)
     fre = min(fre, 107.9)
     fre = max(fre, 87.5)
-    if page3.parentNum == 1:
-	# set the transmitter frequency
-      transmitter_fre = fre
-      manager.turn_to_page(page1, set_parent = False)
-    elif page3.parentNum == 2:
-      # set the receiver frequency
-      receiver_fre = fre
-      radio.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
-      radio.tune(receiver_fre)
-      p2_fre.update_text(str(receiver_fre) + "MHz")
-      manager.turn_to_page(page2, set_parent = False)
+    # set the receiver frequency
+    receiver_fre = fre
+    radio.mute(SI4703_POWER_CONFIG_DMUTE_DIS)
+    radio.tune(receiver_fre)
+    p2_fre.update_text(str(receiver_fre) + "MHz")
+    manager.turn_to_page(page2, set_parent = False)
   except ValueError:
     p3_fre.update_text("Invalid value")
     time.sleep(1)
@@ -277,7 +301,13 @@ while manager.on:
     print "error: {}".format(error)
 
 GPIO.cleanup() 
+write_fifo("exit")
 radio._i2c.close()
-transmitter.close()
+
+fifo = open(Trans2main_fifo, "w", buffering = 0)
+fifo.write("exit")
+fifo.close()
+time.sleep(1)
+
 print "script exited"
 
