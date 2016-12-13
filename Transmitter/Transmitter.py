@@ -146,6 +146,7 @@ class Transmitter:
         sample    = self.reader.getOneSample()
         self._setup_deviation(sample)
       else:
+        self.reader.dataBlockSize = 0
         break
   
     self.busy = False
