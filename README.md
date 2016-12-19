@@ -12,13 +12,13 @@ Note we use linux FIFO objects to communicate, so for the first time only,
 FIFO object needs to be created before executing our main scripts. Under App
 directory, run
 
-mkfifo main2Trans_fifo
-mkfifo Trans2main_fifo
+* mkfifo main2Trans_fifo
+* mkfifo Trans2main_fifo
 
 Then go to the App directory, run:
 
-python Transmission.py &
-python main.py
+* python Transmission.py &
+* python main.py
 
 ### Progess
 
