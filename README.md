@@ -17,8 +17,8 @@ directory, run
 
 Then go to the App directory, run:
 
-* python Transmission.py &
-* python main.py
+* sudo python Transmission.py &
+* sudo python main.py
 
 ### Progess
 
